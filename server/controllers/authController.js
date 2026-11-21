@@ -162,7 +162,8 @@ const getMe = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    const { password, ...userObj } = user;
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    delete userObj.password;
     res.json({ success: true, user: userObj });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -176,7 +177,8 @@ const getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
     const sanitized = users.map(u => {
-      const { password, ...rest } = u;
+      const rest = u.toObject ? u.toObject() : { ...u };
+      delete rest.password;
       return rest;
     });
     res.json({ success: true, count: sanitized.length, users: sanitized });
@@ -201,7 +203,8 @@ const updateUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    const { password, ...rest } = user;
+    const rest = user.toObject ? user.toObject() : { ...user };
+    delete rest.password;
     res.json({ success: true, user: rest });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -240,7 +243,8 @@ const quickSwitchRole = async (req, res) => {
       return res.status(404).json({ success: false, message: `No demo user found for role: ${role}` });
     }
     const token = generateToken(user._id);
-    const { password, ...userObj } = user;
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    delete userObj.password;
     res.json({
       success: true,
       token,
@@ -293,7 +297,8 @@ const createFunctionalUser = async (req, res) => {
       });
     }
 
-    const { password: pwd, ...userWithoutPassword } = user;
+    const userWithoutPassword = user.toObject ? user.toObject() : { ...user };
+    delete userWithoutPassword.password;
     res.status(201).json({
       success: true,
       message: `Functional role '${role}' account created successfully for ${name}`,

@@ -5,11 +5,11 @@ const { Enquiry, Customer, Notification, User } = require('../models');
 // @access  Public / Customer / Sales / Admin
 const createEnquiry = async (req, res) => {
   try {
+    const name = (req.body.name || req.body.customerName || req.user?.name || '').trim();
+    const phone = (req.body.phone || req.body.customerPhone || req.user?.phone || '').trim();
+    const email = (req.body.email || req.body.customerEmail || req.user?.email || '').trim();
+    const address = (req.body.address || req.body.customerAddress || req.user?.address || '').trim();
     const {
-      name,
-      phone,
-      email,
-      address,
       systemType = 'On-Grid',
       proposedCapacity = 3,
       monthlyBill = 2500,
@@ -25,7 +25,13 @@ const createEnquiry = async (req, res) => {
     const userId = req.user ? req.user._id : null;
 
     // Find or create customer
-    let customer = await Customer.findOne({ phone });
+    let customer = await Customer.findOne({
+      $or: [
+        { phone },
+        ...(userId ? [{ userId }] : []),
+        ...(email ? [{ email }] : [])
+      ]
+    });
     if (!customer) {
       customer = await Customer.create({
         name,
@@ -36,6 +42,9 @@ const createEnquiry = async (req, res) => {
         monthlyBill: Number(monthlyBill) || 0,
         userId
       });
+    } else if (userId && !customer.userId) {
+      customer.userId = userId;
+      await customer.save();
     }
 
     const enquiry = await Enquiry.create({
@@ -84,25 +93,28 @@ const getEnquiries = async (req, res) => {
 
     // Customer can only see their own enquiries
     if (req.user.role === 'Customer') {
-      query = {
-        $or: [
-          { customerPhone: req.user.phone },
-          { customerEmail: req.user.email },
-          { userId: req.user._id }
-        ]
-      };
+      const cleanPhone = (req.user.phone || '').replace(/[\s+]/g, '');
+      const orConditions = [
+        { userId: req.user._id },
+        { customerPhone: req.user.phone }
+      ];
+      if (req.user.email) {
+        orConditions.push({ customerEmail: req.user.email });
+      }
+      if (cleanPhone) {
+        orConditions.push({ customerPhone: { $regex: cleanPhone.slice(-10), $options: 'i' } });
+      }
+      query = { $or: orConditions };
     } else if (req.query.status) {
       query.status = req.query.status;
     }
 
-    const enquiries = await Enquiry.find(query);
-    // Sort latest first
-    const sorted = enquiries.sort ? enquiries.sort({ createdAt: -1 }) : enquiries.reverse();
+    const enquiries = await Enquiry.find(query).sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      count: sorted.length,
-      enquiries: sorted
+      count: enquiries.length,
+      enquiries
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

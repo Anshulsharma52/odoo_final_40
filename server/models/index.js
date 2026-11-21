@@ -1,21 +1,19 @@
-const { getModel } = require('../utils/storageEngine');
-
-const User = getModel('users');
-const Customer = getModel('customers');
-const Enquiry = getModel('enquiries');
-const Survey = getModel('surveys');
-const Quotation = getModel('quotations');
-const Order = getModel('orders');
-const Product = getModel('products');
-const Inventory = getModel('inventory');
-const ProductSerialNumber = getModel('product_serial_numbers');
-const Dispatch = getModel('dispatches');
-const Installation = getModel('installations');
-const Payment = getModel('payments');
-const Invoice = getModel('invoices');
-const Warranty = getModel('warranties');
-const ServiceTicket = getModel('service_tickets');
-const Notification = getModel('notifications');
+const User = require('./User');
+const Customer = require('./Customer');
+const Enquiry = require('./Enquiry');
+const Survey = require('./Survey');
+const Quotation = require('./Quotation');
+const Order = require('./Order');
+const Product = require('./Product');
+const Inventory = require('./Inventory');
+const ProductSerialNumber = require('./ProductSerialNumber');
+const Dispatch = require('./Dispatch');
+const Installation = require('./Installation');
+const Payment = require('./Payment');
+const Invoice = require('./Invoice');
+const Warranty = require('./Warranty');
+const ServiceTicket = require('./ServiceTicket');
+const Notification = require('./Notification');
 
 module.exports = {
   User,

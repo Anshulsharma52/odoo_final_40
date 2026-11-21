@@ -7,7 +7,17 @@ const getWarranties = async (req, res) => {
   try {
     let query = {};
     if (req.user.role === 'Customer') {
-      query = { customerPhone: req.user.phone };
+      const cleanPhone = (req.user.phone || '').replace(/[\s+]/g, '');
+      const orConditions = [
+        { customerPhone: req.user.phone }
+      ];
+      if (req.user.email) {
+        orConditions.push({ customerEmail: req.user.email });
+      }
+      if (cleanPhone) {
+        orConditions.push({ customerPhone: { $regex: cleanPhone.slice(-10), $options: 'i' } });
+      }
+      query = { $or: orConditions };
     } else if (req.query.search) {
       const search = req.query.search;
       query = {

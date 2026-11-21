@@ -28,8 +28,9 @@ const protect = async (req, res, next) => {
     }
 
     // Strip password from req.user
-    const { password, ...userWithoutPassword } = user;
-    req.user = userWithoutPassword;
+    const userDoc = user.toObject ? user.toObject() : { ...user };
+    delete userDoc.password;
+    req.user = userDoc;
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Invalid or expired token', error: err.message });

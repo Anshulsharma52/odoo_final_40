@@ -8,6 +8,7 @@ const createTicket = async (req, res) => {
     const {
       customerName,
       customerPhone,
+      customerEmail,
       customerAddress,
       serialNumber,
       productName,
@@ -17,7 +18,13 @@ const createTicket = async (req, res) => {
       priority = 'High'
     } = req.body;
 
-    if (!customerPhone || !description) {
+    const finalPhone = (customerPhone || req.user?.phone || '').trim();
+    const finalName = (customerName || req.user?.name || 'Customer').trim();
+    const finalEmail = (customerEmail || req.user?.email || '').trim();
+    const finalAddress = (customerAddress || req.user?.address || '').trim();
+    const userId = req.user ? req.user._id : null;
+
+    if (!finalPhone || !description) {
       return res.status(400).json({ success: false, message: 'Customer phone and issue description are required' });
     }
 
@@ -34,8 +41,18 @@ const createTicket = async (req, res) => {
         warrantyRef = warranty;
       }
     } else {
-      // Check if customer has any active warranty
-      const warranty = await Warranty.findOne({ customerPhone });
+      // Check if customer has any active warranty by phone or email
+      const cleanPhone = finalPhone.replace(/[\s+]/g, '');
+      const warrantyQuery = [
+        { customerPhone: finalPhone }
+      ];
+      if (cleanPhone) {
+        warrantyQuery.push({ customerPhone: { $regex: cleanPhone.slice(-10), $options: 'i' } });
+      }
+      if (finalEmail) {
+        warrantyQuery.push({ customerEmail: finalEmail });
+      }
+      const warranty = await Warranty.findOne({ $or: warrantyQuery });
       if (warranty && warranty.status === 'Active' && new Date(warranty.endDate) > new Date()) {
         isUnderWarranty = true;
         warrantyRef = warranty;
@@ -49,9 +66,11 @@ const createTicket = async (req, res) => {
 
     const ticket = await ServiceTicket.create({
       ticketNumber,
-      customerName: customerName || (warrantyRef ? warrantyRef.customerName : 'Customer'),
-      customerPhone,
-      customerAddress: customerAddress || '',
+      userId,
+      customerName: finalName || (warrantyRef ? warrantyRef.customerName : 'Customer'),
+      customerPhone: finalPhone,
+      customerEmail: finalEmail,
+      customerAddress: finalAddress,
       productName: productName || (warrantyRef ? warrantyRef.productName : 'Solar Inverter / System'),
       serialNumber: serialNumber || (warrantyRef ? warrantyRef.serialNumber : 'NOT-PROVIDED'),
       faultCode: faultCode || 'ERR-0',
@@ -95,7 +114,18 @@ const getTickets = async (req, res) => {
   try {
     let query = {};
     if (req.user.role === 'Customer') {
-      query = { customerPhone: req.user.phone };
+      const cleanPhone = (req.user.phone || '').replace(/[\s+]/g, '');
+      const orConditions = [
+        { userId: req.user._id },
+        { customerPhone: req.user.phone }
+      ];
+      if (req.user.email) {
+        orConditions.push({ customerEmail: req.user.email });
+      }
+      if (cleanPhone) {
+        orConditions.push({ customerPhone: { $regex: cleanPhone.slice(-10), $options: 'i' } });
+      }
+      query = { $or: orConditions };
     } else if (req.query.status) {
       query.status = req.query.status;
     } else if (req.query.search) {
@@ -110,7 +140,7 @@ const getTickets = async (req, res) => {
       };
     }
 
-    const tickets = await ServiceTicket.find(query);
+    const tickets = await ServiceTicket.find(query).sort({ createdAt: -1 });
     res.json({ success: true, count: tickets.length, tickets });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

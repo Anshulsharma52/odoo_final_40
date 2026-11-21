@@ -84,7 +84,17 @@ const getSurveys = async (req, res) => {
         ]
       };
     } else if (req.user.role === 'Customer') {
-      query = { customerPhone: req.user.phone };
+      const cleanPhone = (req.user.phone || '').replace(/[\s+]/g, '');
+      const orConditions = [
+        { customerPhone: req.user.phone }
+      ];
+      if (req.user.email) {
+        orConditions.push({ customerEmail: req.user.email });
+      }
+      if (cleanPhone) {
+        orConditions.push({ customerPhone: { $regex: cleanPhone.slice(-10), $options: 'i' } });
+      }
+      query = { $or: orConditions };
     }
 
     const surveys = await Survey.find(query);

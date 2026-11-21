@@ -87,7 +87,17 @@ const getPayments = async (req, res) => {
   try {
     let query = {};
     if (req.user.role === 'Customer') {
-      query = { customerPhone: req.user.phone };
+      const cleanPhone = (req.user.phone || '').replace(/[\s+]/g, '');
+      const orConditions = [
+        { customerPhone: req.user.phone }
+      ];
+      if (req.user.email) {
+        orConditions.push({ customerEmail: req.user.email });
+      }
+      if (cleanPhone) {
+        orConditions.push({ customerPhone: { $regex: cleanPhone.slice(-10), $options: 'i' } });
+      }
+      query = { $or: orConditions };
     }
     const payments = await Payment.find(query);
     res.json({ success: true, count: payments.length, payments });
@@ -103,7 +113,17 @@ const getInvoices = async (req, res) => {
   try {
     let query = {};
     if (req.user.role === 'Customer') {
-      query = { customerPhone: req.user.phone };
+      const cleanPhone = (req.user.phone || '').replace(/[\s+]/g, '');
+      const orConditions = [
+        { customerPhone: req.user.phone }
+      ];
+      if (req.user.email) {
+        orConditions.push({ customerEmail: req.user.email });
+      }
+      if (cleanPhone) {
+        orConditions.push({ customerPhone: { $regex: cleanPhone.slice(-10), $options: 'i' } });
+      }
+      query = { $or: orConditions };
     }
     const invoices = await Invoice.find(query);
     res.json({ success: true, count: invoices.length, invoices });

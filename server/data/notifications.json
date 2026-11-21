@@ -1,5 +1,25 @@
 [
   {
+    "_id": "af9c985d7ef74fae81a4105c",
+    "role": "Sales",
+    "title": "New Solar Enquiry Received!",
+    "message": "Anshul requested a 3kW Off-Grid system (Bill: ₹3000/mo).",
+    "link": "/enquiries",
+    "read": false,
+    "createdAt": "2026-11-21T13:24:15.341Z",
+    "updatedAt": "2026-11-21T13:24:15.341Z"
+  },
+  {
+    "_id": "97bcaccf44534a2289f85798",
+    "role": "Sales",
+    "title": "New Solar Enquiry Received!",
+    "message": "Sunil Mehta requested a 3kW Off-Grid system (Bill: ₹3000/mo).",
+    "link": "/enquiries",
+    "read": false,
+    "createdAt": "2026-11-21T13:23:13.542Z",
+    "updatedAt": "2026-11-21T13:23:13.542Z"
+  },
+  {
     "_id": "fb548e80db294cf8bd25842f",
     "role": "Sales",
     "title": "New Solar Enquiry Received!",

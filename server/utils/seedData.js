@@ -603,14 +603,93 @@ async function seed() {
     });
   }
 
-  console.log(' Seeding completed successfully!');
+  // 10. Sync any additional records from server/data/*.json to preserve all historical records in MongoDB
+  const fs = require('fs');
+  const path = require('path');
+  const dataDir = path.join(__dirname, '..', 'data');
+  const modelMap = {
+    'users.json': User,
+    'customers.json': Customer,
+    'products.json': Product,
+    'product_serial_numbers.json': ProductSerialNumber,
+    'enquiries.json': Enquiry,
+    'surveys.json': Survey,
+    'quotations.json': Quotation,
+    'orders.json': Order,
+    'dispatches.json': Dispatch,
+    'installations.json': Installation,
+    'warranties.json': Warranty,
+    'service_tickets.json': ServiceTicket,
+    'payments.json': Payment,
+    'invoices.json': Invoice,
+    'notifications.json': Notification,
+    'inventory.json': Inventory
+  };
+
+  for (const [filename, Model] of Object.entries(modelMap)) {
+    const filePath = path.join(dataDir, filename);
+    if (fs.existsSync(filePath)) {
+      try {
+        const items = JSON.parse(fs.readFileSync(filePath, 'utf8') || '[]');
+        for (const item of items) {
+          if (!item._id) continue;
+          const exists = await Model.findById(item._id);
+          if (exists) continue;
+
+          // Unique key duplicate guards
+          if (filename === 'users.json' && item.email) {
+            const emailExists = await User.findOne({ email: item.email.toLowerCase() });
+            if (emailExists) continue;
+          }
+          if (filename === 'product_serial_numbers.json' && item.serialNumber) {
+            const sExists = await ProductSerialNumber.findOne({ serialNumber: item.serialNumber });
+            if (sExists) continue;
+          }
+          if (filename === 'quotations.json' && item.quotationNumber) {
+            const qExists = await Quotation.findOne({ quotationNumber: item.quotationNumber });
+            if (qExists) continue;
+          }
+          if (filename === 'orders.json' && item.orderNumber) {
+            const oExists = await Order.findOne({ orderNumber: item.orderNumber });
+            if (oExists) continue;
+          }
+          if (filename === 'warranties.json' && item.warrantyNumber) {
+            const wExists = await Warranty.findOne({ warrantyNumber: item.warrantyNumber });
+            if (wExists) continue;
+          }
+          if (filename === 'service_tickets.json' && item.ticketNumber) {
+            const tExists = await ServiceTicket.findOne({ ticketNumber: item.ticketNumber });
+            if (tExists) continue;
+          }
+          if (filename === 'payments.json' && item.receiptNo) {
+            const pExists = await Payment.findOne({ receiptNo: item.receiptNo });
+            if (pExists) continue;
+          }
+          if (filename === 'invoices.json' && item.invoiceNumber) {
+            const iExists = await Invoice.findOne({ invoiceNumber: item.invoiceNumber });
+            if (iExists) continue;
+          }
+
+          await Model.create(item);
+        }
+      } catch (err) {
+        console.warn(`Sync warning for ${filename}:`, err.message);
+      }
+    }
+  }
+
+  console.log(' Seeding & MongoDB synchronization completed successfully!');
 }
 
 if (require.main === module) {
-  seed().then(() => process.exit(0)).catch(err => {
-    console.error('Seed error:', err);
-    process.exit(1);
-  });
+  const connectDB = require('../config/db');
+  connectDB()
+    .then(() => seed())
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error('Seed error:', err);
+      process.exit(1);
+    });
 }
 
 module.exports = seed;
