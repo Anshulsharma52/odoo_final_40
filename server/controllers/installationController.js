@@ -1,4 +1,5 @@
 const { Installation, Order, Warranty, ProductSerialNumber, Notification, Invoice } = require('../models');
+const { generateUniqueCode } = require('../utils/numberGenerator');
 
 // @desc    Get all installations
 // @route   GET /api/installations
@@ -152,9 +153,9 @@ const completeInstallation = async (req, res) => {
             );
 
             // Create warranty certificate record
-            const count = await Warranty.countDocuments();
+            const warrantyNumber = await generateUniqueCode(Warranty, 'warrantyNumber', 'WAR', 5);
             const warrantyCert = await Warranty.create({
-              warrantyNumber: `WAR-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`,
+              warrantyNumber,
               orderId: order._id,
               orderNumber: order.orderNumber,
               customerName: order.customerName,
@@ -171,9 +172,9 @@ const completeInstallation = async (req, res) => {
           }
         } else {
           // Non-serialized item warranty (e.g. Structure / Wiring)
-          const count = await Warranty.countDocuments();
+          const warrantyNumber = await generateUniqueCode(Warranty, 'warrantyNumber', 'WAR', 5);
           const warrantyCert = await Warranty.create({
-            warrantyNumber: `WAR-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`,
+            warrantyNumber,
             orderId: order._id,
             orderNumber: order.orderNumber,
             customerName: order.customerName,

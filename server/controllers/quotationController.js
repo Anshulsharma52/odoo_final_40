@@ -1,5 +1,6 @@
 const { Quotation, Enquiry, Order, Invoice, Notification } = require('../models');
 const { getTemplate, generateBOM } = require('../utils/bomGenerator');
+const { generateUniqueCode } = require('../utils/numberGenerator');
 
 // @desc    Generate a solar quotation
 // @route   POST /api/quotations
@@ -35,14 +36,13 @@ const generateQuotation = async (req, res) => {
     const netPayable = Math.max(0, totalAmount - Number(discount) - applicableSubsidy);
     const advanceRequired = Math.round(netPayable * 0.2); // 20% advance
 
-    const count = await Quotation.countDocuments();
-    const quotationNumber = `QT-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+    const quotationNumber = await generateUniqueCode(Quotation, 'quotationNumber', 'QT', 4);
 
     const quotation = await Quotation.create({
       quotationNumber,
       enquiryId: enquiryId || null,
       customerName,
-      customerPhone,
+      customerPhone: customerPhone || '',
       customerEmail: customerEmail || '',
       customerAddress: customerAddress || '',
       systemType,
@@ -138,8 +138,7 @@ const respondToQuotation = async (req, res) => {
       );
 
       // Generate confirmed Order automatically!
-      const orderCount = await Order.countDocuments();
-      const orderNumber = `ORD-${new Date().getFullYear()}-${String(orderCount + 1).padStart(4, '0')}`;
+      const orderNumber = await generateUniqueCode(Order, 'orderNumber', 'ORD', 4);
 
       // Generate BOM with packing lists
       const bomItems = quotation.items.map(it => ({
@@ -173,8 +172,7 @@ const respondToQuotation = async (req, res) => {
       });
 
       // Generate Advance Invoice
-      const invCount = await Invoice.countDocuments();
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(invCount + 1).padStart(4, '0')}`;
+      const invoiceNumber = await generateUniqueCode(Invoice, 'invoiceNumber', 'INV', 4);
       await Invoice.create({
         invoiceNumber,
         orderId: order._id,

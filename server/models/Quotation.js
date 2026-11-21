@@ -72,6 +72,14 @@ const quotationSchema = new mongoose.Schema(
     notes: {
       type: String,
       default: ''
+    },
+    createdBy: {
+      type: String,
+      default: 'Sales Executive'
+    },
+    customerFeedback: {
+      type: String,
+      default: ''
     }
   },
   {

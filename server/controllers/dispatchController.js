@@ -1,4 +1,5 @@
 const { Dispatch, Order, ProductSerialNumber, Installation, User, Notification, Product } = require('../models');
+const { generateUniqueCode } = require('../utils/numberGenerator');
 
 // @desc    Create dispatch and allocate serial numbers
 // @route   POST /api/dispatches
@@ -19,8 +20,7 @@ const createDispatch = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    const count = await Dispatch.countDocuments();
-    const dispatchNumber = `DSP-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+    const dispatchNumber = await generateUniqueCode(Dispatch, 'dispatchNumber', 'DSP', 4);
 
     // Allocate and update serial numbers
     const allAllocatedSerials = [];

@@ -1,4 +1,5 @@
 const { ServiceTicket, Warranty, User, Notification, Customer } = require('../models');
+const { generateUniqueCode } = require('../utils/numberGenerator');
 
 // @desc    Create a new service complaint/ticket
 // @route   POST /api/service-tickets
@@ -59,8 +60,7 @@ const createTicket = async (req, res) => {
       }
     }
 
-    const count = await ServiceTicket.countDocuments();
-    const ticketNumber = `TKT-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+    const ticketNumber = await generateUniqueCode(ServiceTicket, 'ticketNumber', 'TKT', 4);
 
     const defaultTech = await User.findOne({ role: 'Service & Support' });
 

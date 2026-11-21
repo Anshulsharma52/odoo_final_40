@@ -1,4 +1,5 @@
 const { Payment, Invoice, Order, Notification } = require('../models');
+const { generateUniqueCode } = require('../utils/numberGenerator');
 
 // @desc    Record a customer payment
 // @route   POST /api/payments
@@ -19,8 +20,7 @@ const recordPayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    const count = await Payment.countDocuments();
-    const receiptNo = `REC-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+    const receiptNo = await generateUniqueCode(Payment, 'receiptNo', 'REC', 4);
 
     const paymentAmount = Number(amount);
 

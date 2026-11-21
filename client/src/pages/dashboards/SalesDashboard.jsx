@@ -127,14 +127,14 @@ const SalesDashboard = () => {
     try {
       const res = await api.post('/quotations', {
         enquiryId: selectedEnquiry._id,
-        customerName: selectedEnquiry.customerName,
-        customerPhone: selectedEnquiry.customerPhone,
-        customerEmail: selectedEnquiry.customerEmail,
-        customerAddress: selectedEnquiry.address,
+        customerName: selectedEnquiry.customerName || selectedEnquiry.name,
+        customerPhone: selectedEnquiry.customerPhone || selectedEnquiry.phone || '',
+        customerEmail: selectedEnquiry.customerEmail || selectedEnquiry.email || '',
+        customerAddress: selectedEnquiry.address || selectedEnquiry.customerAddress || '',
         systemType: quoteData.systemType,
-        capacityKw: quoteData.capacityKw,
-        discount: quoteData.discount,
-        subsidyAmount: quoteData.subsidyAmount,
+        capacityKw: Number(quoteData.capacityKw),
+        discount: Number(quoteData.discount) || 0,
+        subsidyAmount: Number(quoteData.subsidyAmount) || 0,
         notes: quoteData.notes
       });
       if (res.data.success) {
@@ -143,7 +143,7 @@ const SalesDashboard = () => {
         fetchSalesData();
       }
     } catch (err) {
-      toast.error('Error generating quotation');
+      toast.error(err.response?.data?.message || 'Error generating quotation');
     }
   };
 
