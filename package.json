@@ -1,0 +1,22 @@
+{
+  "name": "solar-installation-management-system",
+  "version": "1.0.0",
+  "description": "Enterprise Solar Installation Management System (SunPower Solutions) - MERN Stack",
+  "scripts": {
+    "server": "cd server && npm start",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "seed": "cd server && npm run seed"
+  },
+  "keywords": [
+    "solar",
+    "installation",
+    "management",
+    "erp",
+    "mern",
+    "vite",
+    "tailwind"
+  ],
+  "author": "SunPower Engineering",
+  "license": "MIT"
+}

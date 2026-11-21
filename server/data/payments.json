@@ -1,0 +1,18 @@
+[
+  {
+    "_id": "7b5cce6d50674d00872feac7",
+    "receiptNo": "REC-2025-0001",
+    "orderId": "ord_mehta_001",
+    "orderNumber": "ORD-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "amount": 120000,
+    "paymentType": "Final",
+    "paymentMethod": "Bank Transfer",
+    "transactionRef": "NEFT-ICICI-8812903",
+    "status": "Completed",
+    "paymentDate": "2025-05-15T17:00:00.000Z",
+    "createdAt": "2026-11-21T07:28:15.741Z",
+    "updatedAt": "2026-11-21T07:28:15.741Z"
+  }
+]

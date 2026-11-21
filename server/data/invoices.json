@@ -1,0 +1,22 @@
+[
+  {
+    "_id": "f33dbd1151dc4daf91611054",
+    "invoiceNumber": "INV-2025-0001",
+    "orderId": "ord_mehta_001",
+    "orderNumber": "ORD-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "customerAddress": "B-402, Green Acres Society, Baner, Pune 411045",
+    "systemType": "On-Grid",
+    "capacityKw": 3,
+    "subtotal": 165000,
+    "subsidyDeduction": 45000,
+    "grandTotal": 120000,
+    "paidAmount": 120000,
+    "balanceDue": 0,
+    "status": "Paid",
+    "dueDate": "2025-05-20T00:00:00.000Z",
+    "createdAt": "2026-11-21T07:28:15.740Z",
+    "updatedAt": "2026-11-21T07:28:15.740Z"
+  }
+]

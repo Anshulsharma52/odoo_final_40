@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "be986034fb6943728100adcb",
+    "ticketNumber": "TKT-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "customerAddress": "B-402, Green Acres Society, Baner, Pune 411045",
+    "productName": "3 kW Grid-Tie Smart Solar Inverter",
+    "serialNumber": "INV-3KW-8842",
+    "faultCode": "ERR-302 (DC Isolation Fault)",
+    "issueCategory": "Inverter Fault",
+    "description": "Rainy weather breakdown: Inverter showing red LED fault code ERR-302 and generating zero power to home.",
+    "priority": "High",
+    "status": "In Progress",
+    "isUnderWarranty": true,
+    "costBilledToCustomer": 0,
+    "assignedTechnicianName": "Priya Nair",
+    "resolutionNotes": "Technician dispatched to inspect rooftop DC cable gland water ingress and replace surge protection device under warranty.",
+    "partsReplaced": [
+      "DC Surge Protector SPD-40kA"
+    ],
+    "customerConfirmed": false,
+    "createdAt": "2026-11-21T07:28:15.742Z",
+    "updatedAt": "2026-11-21T07:28:15.742Z"
+  }
+]

@@ -1,0 +1,173 @@
+[
+  {
+    "_id": "fb548e80db294cf8bd25842f",
+    "role": "Sales",
+    "title": "New Solar Enquiry Received!",
+    "message": "Sunil Mehta requested a 3kW On-Grid system (Bill: ₹4200/mo).",
+    "link": "/enquiries",
+    "read": false,
+    "createdAt": "2026-11-21T11:58:48.499Z",
+    "updatedAt": "2026-11-21T11:58:48.499Z"
+  },
+  {
+    "_id": "513f618dd3f94c8cba74012b",
+    "userId": "cf66ae93e8394f39823af4f3",
+    "role": "Customer",
+    "title": "Welcome to SunPower Solutions!",
+    "message": "Account created successfully with role Customer. Start exploring your dashboard.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T11:58:26.377Z",
+    "updatedAt": "2026-11-21T11:58:26.377Z"
+  },
+  {
+    "_id": "9a6ac9ef99784ad1bfb0a949",
+    "role": "Sales",
+    "title": "New Solar Enquiry Received!",
+    "message": "Sunil Mehta requested a 1kW Off-Grid system (Bill: ₹3000/mo).",
+    "link": "/enquiries",
+    "read": false,
+    "createdAt": "2026-11-21T11:57:49.892Z",
+    "updatedAt": "2026-11-21T11:57:49.892Z"
+  },
+  {
+    "_id": "f4c5af895a4149b78338ebed",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T11:47:26.462Z",
+    "updatedAt": "2026-11-21T11:47:26.462Z"
+  },
+  {
+    "_id": "19725b605fd84cd4904ddbb2",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T11:47:18.441Z",
+    "updatedAt": "2026-11-21T11:47:18.441Z"
+  },
+  {
+    "_id": "8e3fe881b1ef496894f9e30b",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T11:46:58.491Z",
+    "updatedAt": "2026-11-21T11:46:58.491Z"
+  },
+  {
+    "_id": "2ff34baef02346c5a50a0fc7",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T11:29:13.421Z",
+    "updatedAt": "2026-11-21T11:29:13.421Z"
+  },
+  {
+    "_id": "a78c7f0edbed4033b5c9f2c2",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T11:21:35.148Z",
+    "updatedAt": "2026-11-21T11:21:35.148Z"
+  },
+  {
+    "_id": "907e7070df4348d1b6b3d7c5",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T11:00:39.487Z",
+    "updatedAt": "2026-11-21T11:00:39.487Z"
+  },
+  {
+    "_id": "688d6fbdaaa547cf8f160b8f",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T10:59:01.235Z",
+    "updatedAt": "2026-11-21T10:59:01.235Z"
+  },
+  {
+    "_id": "673e7a7ab867424c9bf31c3b",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T10:56:04.516Z",
+    "updatedAt": "2026-11-21T10:56:04.516Z"
+  },
+  {
+    "_id": "5b3964b9492f414482ab4de9",
+    "role": "Sales",
+    "title": "New Solar Enquiry Received!",
+    "message": "Sunil Mehta requested a 1kW Off-Grid system (Bill: ₹3000/mo).",
+    "link": "/enquiries",
+    "read": false,
+    "createdAt": "2026-11-21T10:20:43.647Z",
+    "updatedAt": "2026-11-21T10:20:43.647Z"
+  },
+  {
+    "_id": "06a8ca21f55b492fa28f36f8",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T10:17:44.747Z",
+    "updatedAt": "2026-11-21T10:17:44.747Z"
+  },
+  {
+    "_id": "fdeb1722fe0f40af90d8bae8",
+    "role": "Sales",
+    "title": "New Solar Enquiry Received!",
+    "message": "Anshul requested a 3kW On-Grid system (Bill: ₹3000/mo).",
+    "link": "/enquiries",
+    "read": false,
+    "createdAt": "2026-11-21T09:23:35.705Z",
+    "updatedAt": "2026-11-21T09:23:35.705Z"
+  },
+  {
+    "_id": "e606b8b894484b8ab1ca5777",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T09:19:55.174Z",
+    "updatedAt": "2026-11-21T09:19:55.174Z"
+  },
+  {
+    "_id": "5ef336ab44db41ca9a795b9b",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T09:18:59.125Z",
+    "updatedAt": "2026-11-21T09:18:59.125Z"
+  },
+  {
+    "_id": "7250af683a9d4efc99e68394",
+    "role": "All",
+    "title": "SunPower Centralized Operations Live",
+    "message": "Welcome to the complete Solar Installation Management System with 8 integrated role-based dashboards.",
+    "link": "/dashboard",
+    "read": false,
+    "createdAt": "2026-11-21T07:28:15.751Z",
+    "updatedAt": "2026-11-21T07:28:15.751Z"
+  }
+]

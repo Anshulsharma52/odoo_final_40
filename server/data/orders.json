@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "ord_mehta_001",
+    "orderNumber": "ORD-2026-0001",
+    "quotationNumber": "QT-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "customerEmail": "customer@gmail.com",
+    "customerAddress": "B-402, Green Acres Society, Baner, Pune 411045",
+    "systemType": "On-Grid",
+    "capacityKw": 3,
+    "totalAmount": 165000,
+    "subsidyAmount": 45000,
+    "netPayable": 120000,
+    "advancePaid": 120000,
+    "balanceDue": 0,
+    "status": "Completed",
+    "dispatchStatus": "Delivered",
+    "installationStatus": "Completed",
+    "bomItems": [
+      {
+        "name": "540W Mono PERC Solar Panel",
+        "category": "Solar Panel",
+        "quantity": 6,
+        "serialRequired": true,
+        "allocatedSerials": [
+          "PAN-PERC-1001",
+          "PAN-PERC-1002",
+          "PAN-PERC-1003",
+          "PAN-PERC-1004",
+          "PAN-PERC-1005",
+          "PAN-PERC-1006"
+        ]
+      },
+      {
+        "name": "3 kW Grid-Tie Smart Solar Inverter",
+        "category": "Inverter",
+        "quantity": 1,
+        "serialRequired": true,
+        "allocatedSerials": [
+          "INV-3KW-8842"
+        ]
+      },
+      {
+        "name": "Hot-Dip Galvanized Mounting Stand (6 panels)",
+        "category": "Structure/Stand",
+        "quantity": 1,
+        "serialRequired": false,
+        "allocatedSerials": []
+      },
+      {
+        "name": "4/6 sqmm UV Protected DC Solar Cable",
+        "category": "Wire/Cable",
+        "quantity": 50,
+        "serialRequired": false,
+        "allocatedSerials": []
+      }
+    ],
+    "createdAt": "2026-11-21T07:28:15.735Z",
+    "updatedAt": "2026-11-21T07:28:15.735Z"
+  }
+]

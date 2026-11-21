@@ -1,0 +1,36 @@
+[
+  {
+    "_id": "050703a2fee74f29bb1f1105",
+    "warrantyNumber": "WAR-2025-00011",
+    "orderId": "ord_mehta_001",
+    "orderNumber": "ORD-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "productName": "540W Mono PERC Solar Panels (6 Units)",
+    "category": "Solar Panel",
+    "serialNumber": "PAN-PERC-BATCH-01",
+    "warrantyYears": 20,
+    "startDate": "2025-05-15T10:00:00.000Z",
+    "endDate": "2045-05-15T10:00:00.000Z",
+    "status": "Active",
+    "createdAt": "2026-11-21T07:28:15.738Z",
+    "updatedAt": "2026-11-21T07:28:15.738Z"
+  },
+  {
+    "_id": "2d54bcaf42424943b46499bb",
+    "warrantyNumber": "WAR-2025-00010",
+    "orderId": "ord_mehta_001",
+    "orderNumber": "ORD-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "productName": "3 kW Grid-Tie Smart Solar Inverter",
+    "category": "Inverter",
+    "serialNumber": "INV-3KW-8842",
+    "warrantyYears": 5,
+    "startDate": "2025-05-15T10:00:00.000Z",
+    "endDate": "2030-05-15T10:00:00.000Z",
+    "status": "Active",
+    "createdAt": "2026-11-21T07:28:15.737Z",
+    "updatedAt": "2026-11-21T07:28:15.737Z"
+  }
+]

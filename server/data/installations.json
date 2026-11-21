@@ -1,0 +1,39 @@
+[
+  {
+    "_id": "b02863284a9b497db09c36d5",
+    "orderId": "ord_mehta_001",
+    "orderNumber": "ORD-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "customerAddress": "B-402, Green Acres Society, Baner, Pune 411045",
+    "systemType": "On-Grid",
+    "capacityKw": 3,
+    "leadTechnicianName": "Vikram Sharma",
+    "status": "Completed",
+    "scheduledDate": "2025-05-14T09:00:00.000Z",
+    "startTime": "2025-05-15T09:30:00.000Z",
+    "completionDate": "2025-05-15T16:45:00.000Z",
+    "checklist": {
+      "structureMounting": true,
+      "panelArrangement": true,
+      "inverterInstallation": true,
+      "batteryConnection": true,
+      "earthingProtection": true,
+      "cableTieAndConduit": true
+    },
+    "testResults": {
+      "generationKw": 2.85,
+      "dcVocVoltage": 382,
+      "earthingResistanceOhms": 1.4,
+      "gridSyncConfirmed": true
+    },
+    "sitePhotos": [
+      "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1548337138-e87d889cc369?auto=format&fit=crop&w=600&q=80"
+    ],
+    "customerSignature": "Sunil Mehta (Digitally Signed On Site)",
+    "customerFeedback": "Very professional team. System generation verified at 2.85 kW instantly.",
+    "createdAt": "2026-11-21T07:28:15.739Z",
+    "updatedAt": "2026-11-21T07:28:15.739Z"
+  }
+]

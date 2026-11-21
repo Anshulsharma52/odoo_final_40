@@ -1,0 +1,173 @@
+[
+  {
+    "_id": "d2cb70b7975a4e979ef01922",
+    "serialNumber": "INV-3KW-8842",
+    "productId": "prod_inv_3kw",
+    "productName": "3 kW Grid-Tie Smart Solar Inverter",
+    "category": "Inverter",
+    "status": "Installed",
+    "orderId": "ord_mehta_001",
+    "orderNumber": "ORD-2026-0001",
+    "customerName": "Sunil Mehta",
+    "customerPhone": "+91 98208 80008",
+    "warrantyYears": 5,
+    "installationDate": "2025-05-15T10:00:00.000Z",
+    "warrantyExpiryDate": "2030-05-15T10:00:00.000Z",
+    "createdAt": "2026-11-21T07:28:15.736Z",
+    "updatedAt": "2026-11-21T07:28:15.736Z"
+  },
+  {
+    "_id": "2562c4f90d0d4ab3975a13b7",
+    "serialNumber": "PAN-PERC-1006",
+    "productId": "prod_panel_540",
+    "productName": "540W Mono PERC Solar Panel",
+    "category": "Solar Panel",
+    "status": "In Stock",
+    "warrantyYears": 20,
+    "createdAt": "2026-11-21T07:28:15.734Z",
+    "updatedAt": "2026-11-21T07:28:15.734Z"
+  },
+  {
+    "_id": "ecfa5abe52ce47f08b069b83",
+    "serialNumber": "PAN-PERC-1005",
+    "productId": "prod_panel_540",
+    "productName": "540W Mono PERC Solar Panel",
+    "category": "Solar Panel",
+    "status": "In Stock",
+    "warrantyYears": 20,
+    "createdAt": "2026-11-21T07:28:15.734Z",
+    "updatedAt": "2026-11-21T07:28:15.734Z"
+  },
+  {
+    "_id": "73088878b9d94d3db73ef278",
+    "serialNumber": "PAN-PERC-1004",
+    "productId": "prod_panel_540",
+    "productName": "540W Mono PERC Solar Panel",
+    "category": "Solar Panel",
+    "status": "In Stock",
+    "warrantyYears": 20,
+    "createdAt": "2026-11-21T07:28:15.733Z",
+    "updatedAt": "2026-11-21T07:28:15.733Z"
+  },
+  {
+    "_id": "13760a5214f54728ba44dd7d",
+    "serialNumber": "PAN-PERC-1003",
+    "productId": "prod_panel_540",
+    "productName": "540W Mono PERC Solar Panel",
+    "category": "Solar Panel",
+    "status": "In Stock",
+    "warrantyYears": 20,
+    "createdAt": "2026-11-21T07:28:15.732Z",
+    "updatedAt": "2026-11-21T07:28:15.732Z"
+  },
+  {
+    "_id": "5704093b53f54f5f88f01e56",
+    "serialNumber": "PAN-PERC-1002",
+    "productId": "prod_panel_540",
+    "productName": "540W Mono PERC Solar Panel",
+    "category": "Solar Panel",
+    "status": "In Stock",
+    "warrantyYears": 20,
+    "createdAt": "2026-11-21T07:28:15.731Z",
+    "updatedAt": "2026-11-21T07:28:15.731Z"
+  },
+  {
+    "_id": "623cff53191444e19966e465",
+    "serialNumber": "PAN-PERC-1001",
+    "productId": "prod_panel_540",
+    "productName": "540W Mono PERC Solar Panel",
+    "category": "Solar Panel",
+    "status": "In Stock",
+    "warrantyYears": 20,
+    "createdAt": "2026-11-21T07:28:15.730Z",
+    "updatedAt": "2026-11-21T07:28:15.730Z"
+  },
+  {
+    "_id": "025695ba773f4907be5a1508",
+    "serialNumber": "BAT-150-5503",
+    "productId": "prod_bat_150ah",
+    "productName": "150Ah Solar Tubular C10 Deep Cycle Battery",
+    "category": "Battery",
+    "status": "In Stock",
+    "warrantyYears": 3,
+    "createdAt": "2026-11-21T07:28:15.729Z",
+    "updatedAt": "2026-11-21T07:28:15.729Z"
+  },
+  {
+    "_id": "379591cc19664d828f6a05b0",
+    "serialNumber": "BAT-150-5502",
+    "productId": "prod_bat_150ah",
+    "productName": "150Ah Solar Tubular C10 Deep Cycle Battery",
+    "category": "Battery",
+    "status": "In Stock",
+    "warrantyYears": 3,
+    "createdAt": "2026-11-21T07:28:15.728Z",
+    "updatedAt": "2026-11-21T07:28:15.728Z"
+  },
+  {
+    "_id": "059445cf0d5b4ac28a6d1c93",
+    "serialNumber": "BAT-150-5501",
+    "productId": "prod_bat_150ah",
+    "productName": "150Ah Solar Tubular C10 Deep Cycle Battery",
+    "category": "Battery",
+    "status": "In Stock",
+    "warrantyYears": 3,
+    "createdAt": "2026-11-21T07:28:15.727Z",
+    "updatedAt": "2026-11-21T07:28:15.727Z"
+  },
+  {
+    "_id": "dae81c4d37264f108ab55b66",
+    "serialNumber": "INV-5KW-7702",
+    "productId": "prod_inv_5kw",
+    "productName": "5 kW Dual-MPPT Grid-Tie Inverter",
+    "category": "Inverter",
+    "status": "In Stock",
+    "warrantyYears": 5,
+    "createdAt": "2026-11-21T07:28:15.726Z",
+    "updatedAt": "2026-11-21T07:28:15.726Z"
+  },
+  {
+    "_id": "353d80969ddb4aceb8d30988",
+    "serialNumber": "INV-5KW-7701",
+    "productId": "prod_inv_5kw",
+    "productName": "5 kW Dual-MPPT Grid-Tie Inverter",
+    "category": "Inverter",
+    "status": "In Stock",
+    "warrantyYears": 5,
+    "createdAt": "2026-11-21T07:28:15.726Z",
+    "updatedAt": "2026-11-21T07:28:15.726Z"
+  },
+  {
+    "_id": "640d0f9c2bed4339ada7338a",
+    "serialNumber": "INV-3KW-9903",
+    "productId": "prod_inv_3kw",
+    "productName": "3 kW Grid-Tie Smart Solar Inverter",
+    "category": "Inverter",
+    "status": "In Stock",
+    "warrantyYears": 5,
+    "createdAt": "2026-11-21T07:28:15.725Z",
+    "updatedAt": "2026-11-21T07:28:15.725Z"
+  },
+  {
+    "_id": "2f6172f7d40d44f8ad2b882a",
+    "serialNumber": "INV-3KW-9902",
+    "productId": "prod_inv_3kw",
+    "productName": "3 kW Grid-Tie Smart Solar Inverter",
+    "category": "Inverter",
+    "status": "In Stock",
+    "warrantyYears": 5,
+    "createdAt": "2026-11-21T07:28:15.723Z",
+    "updatedAt": "2026-11-21T07:28:15.723Z"
+  },
+  {
+    "_id": "3ea32f4690d54c88a332013a",
+    "serialNumber": "INV-3KW-9901",
+    "productId": "prod_inv_3kw",
+    "productName": "3 kW Grid-Tie Smart Solar Inverter",
+    "category": "Inverter",
+    "status": "In Stock",
+    "warrantyYears": 5,
+    "createdAt": "2026-11-21T07:28:15.721Z",
+    "updatedAt": "2026-11-21T07:28:15.721Z"
+  }
+]

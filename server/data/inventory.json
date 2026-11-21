@@ -1,0 +1,15 @@
+[
+  {
+    "_id": "7cbafd22a7fe4b84b77dd466",
+    "productId": "prod_inv_1kw",
+    "productName": "1 kW Grid-Tie Solar Inverter",
+    "type": "INCOMING",
+    "quantity": 1,
+    "supplier": "SunPower Global Tier-1 Suppliers",
+    "invoiceNo": "SUP-1795256303377",
+    "costPerUnit": 15000,
+    "date": "2026-11-21T10:18:23.378Z",
+    "createdAt": "2026-11-21T10:18:23.378Z",
+    "updatedAt": "2026-11-21T10:18:23.378Z"
+  }
+]

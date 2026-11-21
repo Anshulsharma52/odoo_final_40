@@ -1,0 +1,49 @@
+[
+  {
+    "_id": "dfa92b099b66409d953e0568",
+    "userId": "cf66ae93e8394f39823af4f3",
+    "name": "Anshul",
+    "email": "ansh@gmail.com",
+    "phone": "1234567890",
+    "address": "Agra",
+    "electricityConsumerNo": "",
+    "monthlyBill": 3000,
+    "createdAt": "2026-11-21T11:58:26.375Z",
+    "updatedAt": "2026-11-21T11:58:26.375Z"
+  },
+  {
+    "_id": "0a043447c0364b47869ce378",
+    "name": "Anshul",
+    "phone": "123456",
+    "email": "",
+    "address": "Mathura",
+    "electricityConsumerNo": "",
+    "monthlyBill": 3000,
+    "userId": "user_survey_001",
+    "createdAt": "2026-11-21T09:23:35.680Z",
+    "updatedAt": "2026-11-21T09:23:35.680Z"
+  },
+  {
+    "_id": "d9361f4eb5e440328c2cdfca",
+    "name": "Kavita Patel",
+    "phone": "+91 97654 32100",
+    "email": "kavita.patel@gmail.com",
+    "address": "Sector 21, Plot 88, Vashi, Navi Mumbai",
+    "monthlyBill": 3400,
+    "createdAt": "2026-11-21T07:28:15.746Z",
+    "updatedAt": "2026-11-21T07:28:15.746Z"
+  },
+  {
+    "_id": "cust_mehta_001",
+    "userId": "user_customer_001",
+    "name": "Sunil Mehta",
+    "email": "customer@gmail.com",
+    "phone": "+91 98208 80008",
+    "address": "B-402, Green Acres Society, Baner, Pune 411045",
+    "electricityConsumerNo": "MSEDCL-88992011",
+    "monthlyBill": 4200,
+    "connectedLoad": "5 kW",
+    "createdAt": "2026-11-21T07:28:15.711Z",
+    "updatedAt": "2026-11-21T07:28:15.711Z"
+  }
+]

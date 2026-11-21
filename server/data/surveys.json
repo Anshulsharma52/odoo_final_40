@@ -1,0 +1,50 @@
+[
+  {
+    "_id": "bd5d92293041401db0b02981",
+    "enquiryId": "e0959b1a002c4043a262012f",
+    "customerName": "Kavita Patel",
+    "customerPhone": "+91 97654 32100",
+    "customerAddress": "Sector 21, Plot 88, Vashi, Navi Mumbai",
+    "systemType": "On-Grid",
+    "requestedCapacity": 3,
+    "technicianName": "Rohan Joshi",
+    "status": "Completed",
+    "scheduledDate": "2026-11-20T07:28:15.748Z",
+    "report": {
+      "roofAreaSqFt": 520,
+      "direction": "True South (180°)",
+      "tiltAngle": 19,
+      "shadowFreeSpaceSqFt": 420,
+      "cableDistanceMeters": 28,
+      "roofType": "RCC Flat Concrete Roof",
+      "obstacles": "Clean rooftop, parapet height 3ft, zero shadow between 9 AM and 4:30 PM.",
+      "sanctionLoadKw": 5,
+      "supplyType": "Single Phase",
+      "approved": true,
+      "approvedCapacity": 3,
+      "inspectionNotes": "Ideal roof conditions. Recommended 3 kW On-Grid system with 6x 540W Mono PERC panels.",
+      "photographs": [
+        "https://images.unsplash.com/photo-1508873696983-2df5293cb998?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1548337138-e87d889cc369?auto=format&fit=crop&w=600&q=80"
+      ],
+      "completedAt": "2026-11-21T06:28:15.749Z"
+    },
+    "createdAt": "2026-11-21T07:28:15.749Z",
+    "updatedAt": "2026-11-21T07:28:15.749Z"
+  },
+  {
+    "_id": "7f4a27c32b8048be968b0f4d",
+    "enquiryId": "c1cadabfec0a4869a3fe35d2",
+    "customerName": "Deepak Deshmukh",
+    "customerPhone": "+91 98900 12345",
+    "customerAddress": "Villa 14, Hill Crest, Bavdhan, Pune 411021",
+    "systemType": "On-Grid",
+    "requestedCapacity": 5,
+    "technicianName": "Rohan Joshi",
+    "scheduledDate": "2026-11-22T07:28:15.745Z",
+    "status": "Scheduled",
+    "notes": "Bring laser distance meter and tilt inclinometer.",
+    "createdAt": "2026-11-21T07:28:15.745Z",
+    "updatedAt": "2026-11-21T07:28:15.745Z"
+  }
+]

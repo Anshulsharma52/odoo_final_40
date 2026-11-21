@@ -1,0 +1,81 @@
+[
+  {
+    "_id": "6a169e1b37ae44c796d9ceb3",
+    "quotationNumber": "QT-2026-0002",
+    "enquiryId": "e0959b1a002c4043a262012f",
+    "customerName": "Kavita Patel",
+    "customerPhone": "+91 97654 32100",
+    "customerEmail": "kavita.patel@gmail.com",
+    "customerAddress": "Sector 21, Plot 88, Vashi, Navi Mumbai",
+    "systemType": "On-Grid",
+    "capacityKw": 3,
+    "items": [
+      {
+        "name": "540W Mono PERC Solar Panel",
+        "category": "Solar Panel",
+        "quantity": 6,
+        "unitPrice": 15000,
+        "total": 90000,
+        "serialRequired": true
+      },
+      {
+        "name": "3 kW Grid-Tie Smart Solar Inverter",
+        "category": "Inverter",
+        "quantity": 1,
+        "unitPrice": 38000,
+        "total": 38000,
+        "serialRequired": true
+      },
+      {
+        "name": "Hot-Dip Galvanized Mounting Stand (6 panels)",
+        "category": "Structure/Stand",
+        "quantity": 1,
+        "unitPrice": 12000,
+        "total": 12000,
+        "serialRequired": false
+      },
+      {
+        "name": "4/6 sqmm UV Protected DC Cable (Meters)",
+        "category": "Wire/Cable",
+        "quantity": 50,
+        "unitPrice": 90,
+        "total": 4500,
+        "serialRequired": false
+      },
+      {
+        "name": "IP65 AC/DC Distribution Box with SPD",
+        "category": "Switchgear/Earthing",
+        "quantity": 1,
+        "unitPrice": 6500,
+        "total": 6500,
+        "serialRequired": false
+      },
+      {
+        "name": "Double Safety Earthing & Lightning Arrester",
+        "category": "Switchgear/Earthing",
+        "quantity": 3,
+        "unitPrice": 3000,
+        "total": 9000,
+        "serialRequired": false
+      },
+      {
+        "name": "Turnkey Installation & Grid Sync Service",
+        "category": "Installation/Service",
+        "quantity": 1,
+        "unitPrice": 11000,
+        "total": 11000,
+        "serialRequired": false
+      }
+    ],
+    "totalAmount": 171000,
+    "discount": 6000,
+    "subsidyAmount": 45000,
+    "netPayable": 120000,
+    "advanceRequired": 24000,
+    "status": "Sent",
+    "validUntil": "2026-12-05T07:28:15.749Z",
+    "notes": "Eligible for Direct Benefit Transfer (DBT) subsidy of ₹45,000.",
+    "createdAt": "2026-11-21T07:28:15.749Z",
+    "updatedAt": "2026-11-21T07:28:15.749Z"
+  }
+]
