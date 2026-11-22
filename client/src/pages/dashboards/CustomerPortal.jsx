@@ -18,6 +18,7 @@ import {
   Zap,
   MapPin,
   Barcode,
+  Search,
   Sparkles,
   CreditCard,
   Calendar,
