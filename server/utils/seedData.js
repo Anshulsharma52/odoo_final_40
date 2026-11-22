@@ -17,6 +17,7 @@ const {
   Notification,
   Inventory
 } = require('../models');
+const seed50DemoCustomers = require('../scripts/seed50DemoCustomers');
 
 async function seed() {
   console.log('Seeding initial SunPower Solutions data...');
@@ -677,6 +678,9 @@ async function seed() {
       }
     }
   }
+
+  // 11. Seed 50 realistic demo customer records & lifecycle states
+  await seed50DemoCustomers();
 
   console.log(' Seeding & MongoDB synchronization completed successfully!');
 }
