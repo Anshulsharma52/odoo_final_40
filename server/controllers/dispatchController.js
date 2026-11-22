@@ -153,8 +153,59 @@ const createDispatch = async (req, res) => {
 // @access  Private
 const getDispatches = async (req, res) => {
   try {
-    const dispatches = await Dispatch.find();
+    const dispatches = await Dispatch.find().sort({ createdAt: -1 });
     res.json({ success: true, count: dispatches.length, dispatches });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Update dispatch status (track delivery progress)
+// @route   PUT /api/dispatches/:id/status
+// @access  Private (Admin / Warehouse)
+const updateDispatchStatus = async (req, res) => {
+  try {
+    const { status, deliveryNotes } = req.body;
+    const dispatch = await Dispatch.findById(req.params.id);
+    if (!dispatch) {
+      return res.status(404).json({ success: false, message: 'Dispatch record not found' });
+    }
+
+    if (status) {
+      dispatch.status = status;
+      if (status === 'Delivered') {
+        dispatch.deliveredAt = new Date().toISOString();
+      }
+    }
+    if (deliveryNotes !== undefined) {
+      dispatch.deliveryNotes = deliveryNotes;
+    }
+
+    await dispatch.save();
+
+    // If marked delivered, update linked order dispatch status
+    if (dispatch.orderId) {
+      await Order.findByIdAndUpdate(dispatch.orderId, {
+        dispatchStatus: status === 'Delivered' ? 'Delivered' : 'In Transit'
+      });
+    }
+
+    // Notify Customer of delivery update
+    await Notification.create({
+      role: 'Customer',
+      title: status === 'Delivered' ? 'Solar Components Delivered on Site!' : 'Solar Delivery Update',
+      message: status === 'Delivered'
+        ? `All materials for order ${dispatch.orderNumber} have been safely delivered to ${dispatch.customerAddress}. Installation team is scheduled.`
+        : `Order ${dispatch.orderNumber} is now '${status}'. Truck: ${dispatch.vehicleNo}, Driver: ${dispatch.driverName}.`,
+      link: '/orders',
+      read: false
+    });
+
+    res.json({
+      success: true,
+      message: `Dispatch ${dispatch.dispatchNumber} delivery status updated to ${dispatch.status}`,
+      dispatch
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -162,5 +213,6 @@ const getDispatches = async (req, res) => {
 
 module.exports = {
   createDispatch,
-  getDispatches
+  getDispatches,
+  updateDispatchStatus
 };

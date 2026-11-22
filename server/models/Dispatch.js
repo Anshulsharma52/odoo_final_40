@@ -46,13 +46,22 @@ const dispatchSchema = new mongoose.Schema(
       default: ''
     },
     dispatchedItems: [mongoose.Schema.Types.Mixed],
+    allAllocatedSerials: [{ type: String }],
     dispatchDate: {
       type: Date,
       default: Date.now
     },
+    deliveredAt: {
+      type: Date,
+      default: null
+    },
     status: {
       type: String,
-      default: 'Dispatched'
+      default: 'In Transit'
+    },
+    deliveryNotes: {
+      type: String,
+      default: ''
     },
     notes: {
       type: String,

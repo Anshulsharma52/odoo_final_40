@@ -45,7 +45,9 @@ import {
   Save,
   Search,
   Eye,
-  CheckCircle
+  CheckCircle,
+  Truck,
+  Compass
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -64,7 +66,19 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [quotations, setQuotations] = useState([]);
+  const [enquiries, setEnquiries] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Admin Enquiry & Survey Scheduling States
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [selectedEnquiryForSchedule, setSelectedEnquiryForSchedule] = useState(null);
+  const [scheduleData, setScheduleData] = useState({
+    scheduledDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    technicianId: '',
+    technicianName: 'Rohan Joshi',
+    notes: 'Please measure roof tilt, shadow obstruction, and service cable distance.'
+  });
 
   // Admin Quotations & Component Price Management States
   const [quoteSearchTerm, setQuoteSearchTerm] = useState('');
@@ -82,17 +96,26 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [dirRes, ordRes, stockRes, quoRes] = await Promise.all([
+      const [dirRes, ordRes, stockRes, quoRes, enqRes, usersRes] = await Promise.all([
         api.get('/director/analytics'),
         api.get('/orders'),
         api.get('/inventory/low-stock'),
-        api.get('/quotations')
+        api.get('/quotations'),
+        api.get('/enquiries'),
+        api.get('/users').catch(() => ({ data: { success: false, users: [] } }))
       ]);
 
       if (dirRes.data.success) setAnalyticsData(dirRes.data);
       if (ordRes.data.success) setOrders(ordRes.data.orders || []);
       if (stockRes.data.success) setLowStock(stockRes.data.products || []);
       if (quoRes.data.success) setQuotations(quoRes.data.quotations || []);
+      if (enqRes.data.success) setEnquiries(enqRes.data.enquiries || []);
+      if (usersRes.data && usersRes.data.users) {
+        const techs = usersRes.data.users.filter((u) =>
+          ['Technician', 'Field Technician', 'Survey Technician'].includes(u.role)
+        );
+        setTechnicians(techs);
+      }
     } catch (err) {
       console.error('Error fetching admin/director data:', err);
     } finally {
@@ -189,6 +212,55 @@ const AdminDashboard = () => {
     }
   };
 
+  // Admin Enquiry Status Update & Survey Scheduling Handlers
+  const handleUpdateEnquiryStatus = async (enquiryId, newStatus) => {
+    try {
+      const res = await api.put(`/enquiries/${enquiryId}`, { status: newStatus });
+      if (res.data.success) {
+        toast.success(`Enquiry status changed to '${newStatus}' by Admin!`);
+        setEnquiries((prev) =>
+          prev.map((e) => (e._id === enquiryId ? { ...e, status: newStatus } : e))
+        );
+      }
+    } catch (err) {
+      toast.error('Failed to update enquiry status');
+    }
+  };
+
+  const handleOpenScheduleSurvey = (enquiry) => {
+    setSelectedEnquiryForSchedule(enquiry);
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    setScheduleData({
+      scheduledDate: tomorrow,
+      technicianId: technicians[0]?._id || '',
+      technicianName: technicians[0]?.name || 'Rohan Joshi',
+      notes: `Site survey for ${enquiry.customerName} (${enquiry.proposedCapacity || 3}kW ${enquiry.systemType || 'On-Grid'}). Inspect shadow-free area.`
+    });
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleSubmitScheduleSurvey = async (e) => {
+    e.preventDefault();
+    if (!selectedEnquiryForSchedule) return;
+
+    try {
+      const res = await api.post('/surveys/schedule', {
+        enquiryId: selectedEnquiryForSchedule._id,
+        technicianId: scheduleData.technicianId || null,
+        scheduledDate: scheduleData.scheduledDate,
+        notes: scheduleData.notes
+      });
+
+      if (res.data.success) {
+        toast.success(`Site survey scheduled for ${selectedEnquiryForSchedule.customerName}! Status changed to 'Survey Scheduled'.`);
+        setIsScheduleModalOpen(false);
+        fetchDashboardData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to schedule survey');
+    }
+  };
+
   // Update tab default if role switches
   useEffect(() => {
     if (isDirector) {
@@ -271,6 +343,14 @@ const AdminDashboard = () => {
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
             <span>All Quotes</span>
+          </Link>
+
+          <Link
+            to="/dispatches"
+            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+          >
+            <Truck className="w-3.5 h-3.5 text-blue-400" />
+            <span>Dispatches</span>
           </Link>
 
           <Link
@@ -659,6 +739,91 @@ const AdminDashboard = () => {
                   <span className="font-bold">100% Operational</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Customer Solar Enquiries & Survey Scheduling Control */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Compass className="w-5 h-5 text-amber-600" />
+                    Incoming Solar Enquiries & Site Survey Scheduling
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                    Admin Workflow
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Review customer leads, modify enquiry status, and dispatch survey engineers for rooftop feasibility checks.
+                </p>
+              </div>
+              <Link to="/enquiries" className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                View all leads ({enquiries.length}) <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 font-semibold border-y border-slate-100">
+                  <tr>
+                    <th className="py-3 px-3">Customer & Location</th>
+                    <th className="py-3 px-3">System / Package</th>
+                    <th className="py-3 px-3">Monthly Bill</th>
+                    <th className="py-3 px-3">Current Status</th>
+                    <th className="py-3 px-3">Change Status</th>
+                    <th className="py-3 px-3 text-right">Schedule Survey</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {enquiries.slice(0, 5).map((enq) => (
+                    <tr key={enq._id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3 px-3">
+                        <span className="font-bold text-slate-900 block">{enq.customerName}</span>
+                        <span className="text-[11px] text-slate-400">{enq.customerPhone} • {enq.address}</span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="font-bold text-emerald-800">{enq.proposedCapacity || 3} kW</span>
+                        <span className="text-[11px] text-slate-400 block">{enq.systemType}</span>
+                      </td>
+                      <td className="py-3 px-3">₹{(enq.monthlyBill || 0).toLocaleString('en-IN')}/mo</td>
+                      <td className="py-3 px-3">
+                        <StatusBadge status={enq.status} />
+                      </td>
+                      <td className="py-3 px-3">
+                        <select
+                          value={enq.status}
+                          onChange={(e) => handleUpdateEnquiryStatus(enq._id, e.target.value)}
+                          className="px-2 py-1 text-[11px] font-semibold border border-slate-200 rounded-lg bg-white text-slate-800 focus:ring-1 focus:ring-emerald-500 outline-none shadow-xs"
+                        >
+                          {['New', 'Survey Scheduled', 'Survey Completed', 'Quoted', 'Order Confirmed', 'Dropped'].map((st) => (
+                            <option key={st} value={st}>
+                              {st}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        {enq.status === 'Survey Scheduled' ? (
+                          <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold rounded-lg text-[11px] inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-amber-600" /> Survey Booked
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleOpenScheduleSurvey(enq)}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-xs inline-flex items-center gap-1.5 transition-colors"
+                            title="Assign technician and schedule roof survey"
+                          >
+                            <Compass className="w-3.5 h-3.5 text-emerald-200" />
+                            <span>Schedule Survey</span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1110,6 +1275,93 @@ const AdminDashboard = () => {
               className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm flex items-center gap-1.5"
             >
               <Save className="w-3.5 h-3.5" /> Save Quotation & Prices to MongoDB
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ADMIN MODAL 3: SCHEDULE ROOFTOP SITE SURVEY */}
+      <Modal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        title={`Schedule Technical Site Survey: ${selectedEnquiryForSchedule?.customerName || ''}`}
+        size="md"
+      >
+        <form onSubmit={handleSubmitScheduleSurvey} className="space-y-4 text-xs">
+          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+            <span className="text-[10px] font-bold text-amber-800 uppercase block">Customer Rooftop Site</span>
+            <p className="font-bold text-slate-900 text-sm mt-0.5">{selectedEnquiryForSchedule?.customerName}</p>
+            <p className="text-slate-600 text-[11px]">{selectedEnquiryForSchedule?.address} • Phone: {selectedEnquiryForSchedule?.customerPhone}</p>
+            <p className="text-amber-800 font-semibold mt-1">
+              Requested: {selectedEnquiryForSchedule?.proposedCapacity} kW {selectedEnquiryForSchedule?.systemType} System
+            </p>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Scheduled Inspection Date *</label>
+            <input
+              type="date"
+              required
+              value={scheduleData.scheduledDate}
+              onChange={(e) => setScheduleData({ ...scheduleData, scheduledDate: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Assign Survey Technician *</label>
+            <select
+              value={scheduleData.technicianId}
+              onChange={(e) => {
+                const tech = technicians.find((t) => t._id === e.target.value);
+                setScheduleData({
+                  ...scheduleData,
+                  technicianId: e.target.value,
+                  technicianName: tech ? tech.name : 'Rohan Joshi'
+                });
+              }}
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+            >
+              {technicians.length > 0 ? (
+                technicians.map((t) => (
+                  <option key={t._id} value={t._id}>
+                    {t.name} ({t.role})
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="">Rohan Joshi (Senior Field Engineer)</option>
+                  <option value="tech_02">Vikram Sharma (Installation & Survey Lead)</option>
+                  <option value="tech_03">Anjali Deshmukh (Solar Technical Evaluator)</option>
+                </>
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Inspection Instructions & Notes</label>
+            <textarea
+              rows={3}
+              value={scheduleData.notes}
+              onChange={(e) => setScheduleData({ ...scheduleData, notes: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+              placeholder="e.g. Check RCC roof structure, shadow obstruction from water tank, and cable distance to main distribution board."
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setIsScheduleModalOpen(false)}
+              className="px-4 py-2 border border-slate-300 rounded-xl font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm flex items-center gap-1.5"
+            >
+              <Compass className="w-3.5 h-3.5" /> Book Survey Inspection
             </button>
           </div>
         </form>
