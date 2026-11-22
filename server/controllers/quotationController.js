@@ -22,7 +22,18 @@ const generateQuotation = async (req, res) => {
     } = req.body;
 
     const template = getTemplate(capacityKw, systemType);
-    const items = customItems && customItems.length > 0 ? customItems : template.items.map(it => ({
+    const items = customItems && customItems.length > 0 ? customItems.map(it => {
+      const qty = Number(it.quantity) || 1;
+      const unit = Number(it.unitPrice) || 0;
+      return {
+        name: it.name || 'Component',
+        category: it.category || 'Equipment',
+        quantity: qty,
+        unitPrice: unit,
+        total: qty * unit,
+        serialRequired: Boolean(it.serialRequired)
+      };
+    }) : template.items.map(it => ({
       name: it.name,
       category: it.category,
       quantity: it.quantity,
@@ -31,9 +42,9 @@ const generateQuotation = async (req, res) => {
       serialRequired: it.serialRequired
     }));
 
-    const totalAmount = items.reduce((acc, curr) => acc + (curr.quantity * curr.unitPrice), 0);
-    const applicableSubsidy = subsidyAmount !== null ? Number(subsidyAmount) : template.subsidyAmount;
-    const netPayable = Math.max(0, totalAmount - Number(discount) - applicableSubsidy);
+    const totalAmount = items.reduce((acc, curr) => acc + curr.total, 0);
+    const applicableSubsidy = subsidyAmount !== null && subsidyAmount !== undefined ? Number(subsidyAmount) : template.subsidyAmount;
+    const netPayable = Math.max(0, totalAmount - Number(discount || 0) - applicableSubsidy);
     const advanceRequired = Math.round(netPayable * 0.2); // 20% advance
 
     const quotationNumber = await generateUniqueCode(Quotation, 'quotationNumber', 'QT', 4);
@@ -73,6 +84,20 @@ const generateQuotation = async (req, res) => {
     });
 
     res.status(201).json({ success: true, quotation });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Get Bill of Materials template and default subsidy for system
+// @route   GET /api/quotations/template
+// @access  Private
+const getQuotationTemplate = async (req, res) => {
+  try {
+    const capacityKw = Number(req.query.capacityKw) || 3;
+    const systemType = req.query.systemType || 'On-Grid';
+    const template = getTemplate(capacityKw, systemType);
+    res.json({ success: true, template });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -145,6 +170,8 @@ const respondToQuotation = async (req, res) => {
         name: it.name,
         category: it.category,
         quantity: it.quantity,
+        unitPrice: it.unitPrice || 0,
+        total: it.total || ((it.quantity || 1) * (it.unitPrice || 0)),
         serialRequired: it.serialRequired || false,
         allocatedSerials: []
       }));
@@ -179,10 +206,13 @@ const respondToQuotation = async (req, res) => {
         orderNumber: order.orderNumber,
         customerName: quotation.customerName,
         customerPhone: quotation.customerPhone,
+        customerEmail: quotation.customerEmail || '',
         customerAddress: quotation.customerAddress,
         systemType: quotation.systemType,
         capacityKw: quotation.capacityKw,
+        items: quotation.items || [],
         subtotal: quotation.totalAmount,
+        discount: quotation.discount || 0,
         subsidyDeduction: quotation.subsidyAmount,
         grandTotal: quotation.netPayable,
         paidAmount: quotation.advanceRequired,
@@ -233,9 +263,87 @@ const respondToQuotation = async (req, res) => {
   }
 };
 
+// @desc    Update quotation (items, component prices, discount, subsidy, notes)
+// @route   PUT /api/quotations/:id
+// @access  Private (Admin / Sales)
+const updateQuotation = async (req, res) => {
+  try {
+    const {
+      items = null,
+      discount,
+      subsidyAmount,
+      notes,
+      capacityKw,
+      systemType
+    } = req.body;
+
+    const quotation = await Quotation.findById(req.params.id);
+    if (!quotation) {
+      return res.status(404).json({ success: false, message: 'Quotation not found' });
+    }
+
+    if (items && Array.isArray(items) && items.length > 0) {
+      quotation.items = items.map(it => {
+        const qty = Number(it.quantity) || 1;
+        const unit = Number(it.unitPrice) || 0;
+        return {
+          name: it.name || 'Component',
+          category: it.category || 'Equipment',
+          quantity: qty,
+          unitPrice: unit,
+          total: qty * unit,
+          serialRequired: Boolean(it.serialRequired)
+        };
+      });
+      quotation.totalAmount = quotation.items.reduce((acc, curr) => acc + curr.total, 0);
+    }
+
+    if (discount !== undefined) quotation.discount = Number(discount);
+    if (subsidyAmount !== undefined) quotation.subsidyAmount = Number(subsidyAmount);
+    if (capacityKw !== undefined) quotation.capacityKw = Number(capacityKw);
+    if (systemType !== undefined) quotation.systemType = systemType;
+    if (notes !== undefined) quotation.notes = notes;
+
+    quotation.netPayable = Math.max(0, (quotation.totalAmount || 0) - (quotation.discount || 0) - (quotation.subsidyAmount || 0));
+    quotation.advanceRequired = Math.round(quotation.netPayable * 0.2);
+
+    await quotation.save();
+
+    // If linked to an order, update order BOM & amounts too
+    const linkedOrder = await Order.findOne({ quotationId: quotation._id });
+    if (linkedOrder) {
+      linkedOrder.totalAmount = quotation.totalAmount;
+      linkedOrder.discount = quotation.discount;
+      linkedOrder.subsidyAmount = quotation.subsidyAmount;
+      linkedOrder.netPayable = quotation.netPayable;
+      linkedOrder.balanceDue = quotation.netPayable - (linkedOrder.advancePaid || 0);
+      linkedOrder.bomItems = quotation.items.map(it => ({
+        name: it.name,
+        category: it.category,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+        total: it.total,
+        serialRequired: it.serialRequired,
+        allocatedSerials: []
+      }));
+      await linkedOrder.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Quotation and component prices updated successfully!',
+      quotation
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   generateQuotation,
+  getQuotationTemplate,
   getQuotations,
   getQuotationById,
-  respondToQuotation
+  respondToQuotation,
+  updateQuotation
 };

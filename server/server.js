@@ -22,6 +22,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const directorRoutes = require('./routes/directorRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/service-tickets', serviceRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/director', directorRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/invoices', invoiceRoutes);
 app.use('/api/upload', uploadRoutes);
 
 // Error Handling Middleware

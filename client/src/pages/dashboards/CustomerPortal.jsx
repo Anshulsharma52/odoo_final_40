@@ -26,7 +26,11 @@ import {
   Mail,
   AlertCircle,
   Wrench,
-  Check
+  Check,
+  Eye,
+  Printer,
+  FileText,
+  Layers
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -37,6 +41,7 @@ const CustomerPortal = () => {
   const [surveys, setSurveys] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [warranties, setWarranties] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -47,6 +52,13 @@ const CustomerPortal = () => {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [selectedOrderForPay, setSelectedOrderForPay] = useState(null);
+
+  // Component & Invoice Inspection Modals
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  const [isQuoteViewModalOpen, setIsQuoteViewModalOpen] = useState(false);
+  const [selectedQuoteForView, setSelectedQuoteForView] = useState(null);
 
   // Forms dynamically bound to the authenticated user
   const [enquiryForm, setEnquiryForm] = useState({
@@ -70,6 +82,30 @@ const CustomerPortal = () => {
 
   const [payAmount, setPayAmount] = useState(25000);
 
+  // Rapid Serial Number / Barcode Warranty Verification in Customer Portal
+  const [customerSerialSearch, setCustomerSerialSearch] = useState('');
+  const [customerSerialResult, setCustomerSerialResult] = useState(null);
+  const [isVerifyingCustomerSerial, setIsVerifyingCustomerSerial] = useState(false);
+
+  const handleVerifyCustomerSerial = async (e) => {
+    e?.preventDefault();
+    if (!customerSerialSearch.trim()) return;
+
+    setIsVerifyingCustomerSerial(true);
+    try {
+      const res = await api.get(`/warranties/verify/${encodeURIComponent(customerSerialSearch.trim())}`);
+      if (res.data.success) {
+        setCustomerSerialResult(res.data);
+        toast.success(`Warranty record verified: ${res.data.isUnderWarranty ? 'ACTIVE (Free Coverage)' : 'OUT OF WARRANTY'}`);
+      }
+    } catch (err) {
+      setCustomerSerialResult(null);
+      toast.error(err.response?.data?.message || 'No warranty record found for this serial/phone number');
+    } finally {
+      setIsVerifyingCustomerSerial(false);
+    }
+  };
+
   // Keep form fields synced when auth user is available
   useEffect(() => {
     if (user) {
@@ -85,11 +121,12 @@ const CustomerPortal = () => {
 
   const fetchCustomerData = async () => {
     try {
-      const [enqRes, surRes, quoRes, ordRes, warRes, tktRes, payRes] = await Promise.all([
+      const [enqRes, surRes, quoRes, ordRes, invRes, warRes, tktRes, payRes] = await Promise.all([
         api.get('/enquiries'),
         api.get('/surveys'),
         api.get('/quotations'),
         api.get('/orders'),
+        api.get('/invoices'),
         api.get('/warranties'),
         api.get('/service-tickets'),
         api.get('/payments')
@@ -99,6 +136,7 @@ const CustomerPortal = () => {
       if (surRes.data.success) setSurveys(surRes.data.surveys || []);
       if (quoRes.data.success) setQuotations(quoRes.data.quotations || []);
       if (ordRes.data.success) setOrders(ordRes.data.orders || []);
+      if (invRes.data.success) setInvoices(invRes.data.invoices || []);
       if (warRes.data.success) setWarranties(warRes.data.warranties || []);
       if (tktRes.data.success) setTickets(tktRes.data.tickets || []);
       if (payRes.data.success) setPayments(payRes.data.payments || []);
@@ -211,6 +249,36 @@ const CustomerPortal = () => {
     }
   };
 
+  // Helper to open invoice modal for an order
+  const handleOpenOrderInvoice = (order) => {
+    // Find matching invoice or construct invoice view from order
+    const matchingInv = invoices.find((inv) => inv.orderId === order._id || inv.orderNumber === order.orderNumber);
+    if (matchingInv) {
+      setSelectedInvoice(matchingInv);
+    } else {
+      setSelectedInvoice({
+        invoiceNumber: `INV-${order.orderNumber?.replace('ORD-', '') || '2026-0001'}`,
+        orderNumber: order.orderNumber,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerEmail: order.customerEmail,
+        customerAddress: order.customerAddress,
+        systemType: order.systemType,
+        capacityKw: order.capacityKw,
+        items: order.bomItems || [],
+        subtotal: order.totalAmount,
+        discount: 0,
+        subsidyDeduction: order.subsidyAmount,
+        grandTotal: order.netPayable,
+        paidAmount: order.advancePaid,
+        balanceDue: order.balanceDue,
+        status: order.balanceDue === 0 ? 'Fully Paid' : 'Partially Paid',
+        createdAt: order.createdAt
+      });
+    }
+    setIsInvoiceModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -233,7 +301,7 @@ const CustomerPortal = () => {
             Welcome, {user?.name || 'Valued Homeowner'}!
           </h1>
           <p className="text-sm text-emerald-100 mt-2 leading-relaxed">
-            Track your solar requests, roof survey feasibility, approve quotations, monitor live installation milestones, and manage 20-year certified warranties.
+            Track your solar requests, inspect certified component bills & tax invoices, approve quotations, monitor live installation milestones, and manage 20-year certified warranties.
           </p>
           <div className="flex flex-wrap items-center gap-4 text-xs text-emerald-200 mt-3">
             {user?.phone && (
@@ -269,14 +337,14 @@ const CustomerPortal = () => {
         <StatCard
           title="Solar Requests"
           value={enquiries.length}
-          subtext={`${enquiries.filter(e => e.status === 'New').length} pending review`}
+          subtext={`${enquiries.filter((e) => e.status === 'New').length} pending review`}
           icon={Sun}
           color="amber"
         />
         <StatCard
           title="Quotations Received"
           value={quotations.length}
-          subtext={`${quotations.filter(q => q.status === 'Sent').length} awaiting decision`}
+          subtext={`${quotations.filter((q) => q.status === 'Sent').length} awaiting decision`}
           icon={FileSpreadsheet}
           color="blue"
         />
@@ -290,14 +358,14 @@ const CustomerPortal = () => {
         <StatCard
           title="Service & Maintenance"
           value={tickets.length}
-          subtext={`${tickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length} resolved`}
+          subtext={`${tickets.filter((t) => t.status === 'Resolved' || t.status === 'Closed').length} resolved`}
           icon={Headphones}
           color="purple"
         />
       </div>
 
       {/* Quotations Awaiting Customer Decision */}
-      {quotations.filter(q => q.status === 'Sent').length > 0 && (
+      {quotations.filter((q) => q.status === 'Sent').length > 0 && (
         <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5 shadow-xs">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -309,40 +377,58 @@ const CustomerPortal = () => {
             </span>
           </div>
           <p className="text-xs text-amber-800 mb-4">
-            Our solar engineers have prepared a verified solar package quote based on your rooftop survey. Accept below to initiate warehouse dispatch & installation.
+            Our solar engineers have prepared a verified solar package quote with complete itemized component pricing based on your rooftop survey. Inspect components and approve below.
           </p>
 
           <div className="space-y-3">
-            {quotations.filter(q => q.status === 'Sent').map((quote) => (
-              <div key={quote._id} className="p-4 rounded-xl bg-white border border-amber-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span className="font-mono text-xs font-bold text-slate-500">{quote.quotationNumber}</span>
-                  <h3 className="font-bold text-base text-slate-900 mt-0.5">
-                    {quote.capacityKw} kW {quote.systemType} Solar Package
-                  </h3>
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-600 mt-2">
-                    <span>Base Value: <strong>₹{quote.totalAmount?.toLocaleString('en-IN')}</strong></span>
-                    <span className="text-emerald-600 font-semibold">Subsidy: -₹{quote.subsidyAmount?.toLocaleString('en-IN')}</span>
-                    <span className="text-slate-900 font-bold">Net Payable: ₹{quote.netPayable?.toLocaleString('en-IN')}</span>
+            {quotations
+              .filter((q) => q.status === 'Sent')
+              .map((quote) => (
+                <div
+                  key={quote._id}
+                  className="p-4 rounded-xl bg-white border border-amber-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div>
+                    <span className="font-mono text-xs font-bold text-slate-500">{quote.quotationNumber}</span>
+                    <h3 className="font-bold text-base text-slate-900 mt-0.5">
+                      {quote.capacityKw} kW {quote.systemType} Solar Package
+                    </h3>
+                    <div className="flex flex-wrap gap-3 text-xs text-slate-600 mt-2">
+                      <span>Base Value: <strong>₹{quote.totalAmount?.toLocaleString('en-IN')}</strong></span>
+                      <span className="text-emerald-600 font-semibold">
+                        Subsidy (DBT): -₹{quote.subsidyAmount?.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-slate-900 font-bold">
+                        Net Payable: ₹{quote.netPayable?.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedQuoteForView(quote);
+                        setIsQuoteViewModalOpen(true);
+                      }}
+                      className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-semibold text-xs flex items-center gap-1 transition-colors"
+                    >
+                      <Eye className="w-4 h-4 text-blue-600" /> View Components & BOM
+                    </button>
+                    <button
+                      onClick={() => handleRespondQuotation(quote._id, 'reject')}
+                      className="px-3 py-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-xl font-semibold text-xs transition-colors"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleRespondQuotation(quote._id, 'accept')}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center gap-1.5"
+                    >
+                      <CheckCircle className="w-4 h-4" /> Accept Quotation & Order
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleRespondQuotation(quote._id, 'reject')}
-                    className="px-3.5 py-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-xl font-semibold text-xs transition-colors"
-                  >
-                    Decline
-                  </button>
-                  <button
-                    onClick={() => handleRespondQuotation(quote._id, 'accept')}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center gap-1.5"
-                  >
-                    <CheckCircle className="w-4 h-4" /> Accept Quotation & Order
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}
@@ -383,7 +469,6 @@ const CustomerPortal = () => {
         ) : (
           <div className="space-y-3">
             {enquiries.map((enq) => {
-              // Check if there is an associated survey scheduled for this enquiry
               const matchingSurvey = surveys.find(
                 (s) => s.enquiryId === enq._id || (s.customerPhone && s.customerPhone === enq.customerPhone)
               );
@@ -427,7 +512,6 @@ const CustomerPortal = () => {
                     </div>
                   </div>
 
-                  {/* Survey Details Banner if survey exists */}
                   {matchingSurvey && (
                     <div className="mt-3 pt-3 border-t border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-100">
                       <div className="flex items-center gap-2 text-emerald-900 font-medium">
@@ -446,7 +530,7 @@ const CustomerPortal = () => {
         )}
       </div>
 
-      {/* SECTION 2: Active System & Installation Tracker */}
+      {/* SECTION 2: Active System, Installation Tracker & Itemized Invoice */}
       {latestOrder && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -479,21 +563,33 @@ const CustomerPortal = () => {
 
           <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="space-y-0.5">
-              <p className="text-slate-500">Order: <strong>{latestOrder.orderNumber}</strong> • Balance Due: <span className="text-rose-600 font-bold">₹{(latestOrder.balanceDue || 0).toLocaleString('en-IN')}</span></p>
+              <p className="text-slate-500">
+                Order: <strong>{latestOrder.orderNumber}</strong> • Balance Due:{' '}
+                <span className="text-rose-600 font-bold">₹{(latestOrder.balanceDue || 0).toLocaleString('en-IN')}</span>
+              </p>
               <p className="text-slate-500">Site Location: {latestOrder.customerAddress}</p>
             </div>
-            {latestOrder.balanceDue > 0 && (
+
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => {
-                  setSelectedOrderForPay(latestOrder);
-                  setPayAmount(latestOrder.balanceDue);
-                  setIsPayModalOpen(true);
-                }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs flex items-center gap-1.5 shadow-sm"
+                onClick={() => handleOpenOrderInvoice(latestOrder)}
+                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
               >
-                <CreditCard className="w-4 h-4" /> Pay Balance Online
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> View Installation Components & Invoice
               </button>
-            )}
+              {latestOrder.balanceDue > 0 && (
+                <button
+                  onClick={() => {
+                    setSelectedOrderForPay(latestOrder);
+                    setPayAmount(latestOrder.balanceDue);
+                    setIsPayModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs flex items-center gap-1.5 shadow-sm"
+                >
+                  <CreditCard className="w-4 h-4" /> Pay Balance Online
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -571,11 +667,13 @@ const CustomerPortal = () => {
                   </div>
 
                   <div className="sm:text-right flex-shrink-0">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                      tkt.priority === 'Urgent' || tkt.priority === 'High'
-                        ? 'bg-rose-100 text-rose-800'
-                        : 'bg-slate-100 text-slate-700'
-                    }`}>
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                        tkt.priority === 'Urgent' || tkt.priority === 'High'
+                          ? 'bg-rose-100 text-rose-800'
+                          : 'bg-slate-100 text-slate-700'
+                      }`}
+                    >
                       {tkt.priority} Priority
                     </span>
                   </div>
@@ -592,63 +690,167 @@ const CustomerPortal = () => {
         )}
       </div>
 
-      {/* Grid: Active Warranties & Installed Equipment */}
+      {/* Grid: Active Warranties & Invoices/Receipts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Warranty Certificates */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" /> Active Warranty Certificates
-            </h3>
-            <span className="text-xs text-slate-400">{warranties.length} Certificates</span>
-          </div>
-
-          {warranties.length === 0 ? (
-            <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">
-              Warranty certificates are issued upon solar plant commissioning.
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Active Warranty Certificates
+              </h3>
+              <span className="text-xs text-slate-400 font-semibold">{warranties.length} Certified Devices</span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {warranties.map((war) => (
-                <div
-                  key={war._id}
-                  className="p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/40 text-xs space-y-1.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-emerald-950 text-sm">{war.productName}</span>
-                    <span className="px-2 py-0.5 rounded-full font-bold text-[10px] bg-emerald-200 text-emerald-900">
-                      {war.warrantyYears} Years Protection
-                    </span>
+
+            {/* Quick Equipment Serial Number Scanner / Lookup */}
+            <form onSubmit={handleVerifyCustomerSerial} className="mb-3.5 flex gap-1.5">
+              <div className="relative flex-1">
+                <Barcode className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <input
+                  type="text"
+                  value={customerSerialSearch}
+                  onChange={(e) => setCustomerSerialSearch(e.target.value)}
+                  placeholder="Verify Equipment Serial (e.g. INV-3KW-8842 or phone)..."
+                  className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isVerifyingCustomerSerial}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 flex items-center gap-1 transition-colors"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span>Verify</span>
+              </button>
+            </form>
+
+            {/* Verification Result Card if Searched */}
+            {customerSerialResult && (
+              <div className="mb-3.5 p-3 rounded-xl bg-slate-900 text-white text-xs border border-emerald-500/40">
+                <div className="flex items-center justify-between pb-1.5 border-b border-slate-700">
+                  <span className="font-mono font-bold text-emerald-300">
+                    {customerSerialResult.warranty?.serialNumber}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                    customerSerialResult.isUnderWarranty ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
+                  }`}>
+                    {customerSerialResult.isUnderWarranty ? '✓ UNDER WARRANTY' : 'EXPIRED'}
+                  </span>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-slate-300 text-[11px]">
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Equipment</span>
+                    <span className="font-medium text-white">{customerSerialResult.warranty?.productName}</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-600 pt-1">
-                    <span className="font-mono text-slate-500 flex items-center gap-1">
-                      <Barcode className="w-3.5 h-3.5" /> {war.serialNumber}
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      Valid till: <strong>{new Date(war.endDate).toLocaleDateString()}</strong>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Valid Until</span>
+                    <span className="font-medium text-white">
+                      {new Date(customerSerialResult.warranty?.endDate).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                  <span className="text-emerald-400 font-semibold">
+                    {customerSerialResult.isUnderWarranty ? 'Zero-Cost Free Replacement / Repair' : 'Standard Out-of-Warranty Service'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTicketForm((prev) => ({
+                        ...prev,
+                        serialNumber: customerSerialResult.warranty?.serialNumber || customerSerialSearch,
+                        issueCategory: 'Inverter Fault'
+                      }));
+                      setIsTicketModalOpen(true);
+                    }}
+                    className="px-2 py-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg text-[10px]"
+                  >
+                    Raise Ticket
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {warranties.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">
+                Warranty certificates are issued upon solar plant commissioning.
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                {warranties.map((war) => (
+                  <div
+                    key={war._id}
+                    className="p-3 rounded-xl border border-emerald-100 bg-emerald-50/40 text-xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-950">{war.productName}</span>
+                      <span className="px-2 py-0.5 rounded-full font-bold text-[10px] bg-emerald-200 text-emerald-900">
+                        {war.warrantyYears} Years Protection
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600 pt-0.5">
+                      <span className="font-mono text-slate-500 flex items-center gap-1 text-[11px]">
+                        <Barcode className="w-3.5 h-3.5" /> {war.serialNumber}
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Valid till: <strong>{new Date(war.endDate).toLocaleDateString()}</strong>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Invoices & Payment Receipts */}
+        {/* Official Tax Invoices & Payment Receipts */}
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-blue-600" /> Invoices & Payment Receipts
+              <Receipt className="w-4 h-4 text-blue-600" /> Tax Invoices & Receipts
             </h3>
-            <span className="text-xs text-slate-400">{payments.length} Payments</span>
+            <span className="text-xs text-slate-400">{invoices.length + payments.length} Documents</span>
           </div>
 
-          {payments.length === 0 ? (
+          {invoices.length === 0 && payments.length === 0 ? (
             <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">
-              No payments or receipts recorded yet.
+              Official tax invoices and payment receipts will appear here upon order confirmation.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {/* Invoices */}
+              {invoices.map((inv) => (
+                <div
+                  key={inv._id}
+                  className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/40 flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <span className="font-mono font-bold text-emerald-900">{inv.invoiceNumber}</span>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      Order: {inv.orderNumber} • {inv.capacityKw} kW {inv.systemType}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <span className="font-extrabold text-slate-900 text-sm">
+                        ₹{inv.grandTotal?.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-semibold block">{inv.status}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedInvoice(inv);
+                        setIsInvoiceModalOpen(true);
+                      }}
+                      className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[11px] flex items-center gap-1 shadow-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> View
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Payment Receipts */}
               {payments.map((pay) => (
                 <div
                   key={pay._id}
@@ -674,6 +876,289 @@ const CustomerPortal = () => {
           )}
         </div>
       </div>
+
+      {/* MODAL 1: Official Tax Invoice & Installation Component Bill */}
+      <Modal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        title="Official Tax Invoice & Installation Components"
+      >
+        <div id="printable-invoice" className="space-y-4 text-xs max-h-[80vh] overflow-y-auto pr-1">
+          {/* Invoice Header */}
+          <div className="p-4 bg-slate-900 text-white rounded-xl shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-emerald-400 font-extrabold text-base tracking-tight flex items-center gap-1.5">
+                  <Sun className="w-5 h-5 text-amber-400" /> SunPower Solar Solutions Pvt. Ltd.
+                </span>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  Ministry of New and Renewable Energy (MNRE) Empanelled Rooftop Installer
+                </p>
+                <p className="text-[10px] text-slate-400">GSTIN: 27AABCS1429E1Z8 • Pune, Maharashtra</p>
+              </div>
+              <div className="sm:text-right">
+                <span className="font-mono text-sm font-bold text-amber-300 block">
+                  {selectedInvoice?.invoiceNumber}
+                </span>
+                <span className="text-[11px] text-slate-300 block">
+                  Date: {selectedInvoice?.createdAt ? new Date(selectedInvoice.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
+                </span>
+                <span className="text-[10px] text-emerald-300 uppercase font-semibold">
+                  Status: {selectedInvoice?.status || 'Issued'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Customer & System Particulars */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Customer Particulars:</span>
+              <p className="font-bold text-sm text-slate-900 mt-0.5">{selectedInvoice?.customerName}</p>
+              <p className="text-slate-600 mt-0.5">{selectedInvoice?.customerPhone}</p>
+              <p className="text-slate-600 text-[11px] mt-0.5">{selectedInvoice?.customerAddress}</p>
+            </div>
+            <div className="sm:text-right">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Installation Project:</span>
+              <p className="font-bold text-slate-900 mt-0.5">
+                {selectedInvoice?.capacityKw} kW {selectedInvoice?.systemType} Rooftop Plant
+              </p>
+              <p className="text-slate-600 mt-0.5">Order Ref: {selectedInvoice?.orderNumber || 'Standard Package'}</p>
+              <p className="text-emerald-700 font-semibold text-[11px] mt-0.5">
+                Certified DBT Subsidy Eligible: Yes ✓
+              </p>
+            </div>
+          </div>
+
+          {/* Itemized Components Used in Installation */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="bg-slate-100 px-3.5 py-2 font-bold text-slate-800 flex items-center justify-between">
+              <span>List of Components Used in Installation (Bill of Materials)</span>
+              <span className="text-[11px] font-normal text-slate-500">
+                {(selectedInvoice?.items || []).length} Verified Items
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                  <tr>
+                    <th className="py-2.5 px-3">#</th>
+                    <th className="py-2.5 px-3">Equipment / Component</th>
+                    <th className="py-2.5 px-3">Category</th>
+                    <th className="py-2.5 px-3 text-center">Qty</th>
+                    <th className="py-2.5 px-3 text-right">Unit Price (₹)</th>
+                    <th className="py-2.5 px-3 text-right">Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(selectedInvoice?.items || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-4 text-center text-slate-400">
+                        Component package details linked with Order {selectedInvoice?.orderNumber}
+                      </td>
+                    </tr>
+                  ) : (
+                    (selectedInvoice?.items || []).map((it, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3">
+                          <span className="font-bold text-slate-900 block">{it.name}</span>
+                          {it.allocatedSerials && it.allocatedSerials.length > 0 && (
+                            <span className="font-mono text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5 inline-block">
+                              Serials: {it.allocatedSerials.join(', ')}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-500">{it.category}</td>
+                        <td className="py-2.5 px-3 text-center font-bold text-slate-800">{it.quantity}</td>
+                        <td className="py-2.5 px-3 text-right text-slate-700">₹{(it.unitPrice || 0).toLocaleString('en-IN')}</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                          ₹{((it.quantity || 1) * (it.unitPrice || 0)).toLocaleString('en-IN')}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Financial Totals Statement */}
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+            <div className="flex justify-between text-slate-600">
+              <span>Gross Component Base Value:</span>
+              <span className="font-semibold text-slate-800">
+                ₹{(selectedInvoice?.subtotal || selectedInvoice?.grandTotal || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
+            {selectedInvoice?.discount > 0 && (
+              <div className="flex justify-between text-slate-600">
+                <span>Special Promotional Rebate:</span>
+                <span className="font-semibold text-rose-600">-₹{selectedInvoice.discount.toLocaleString('en-IN')}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-slate-600">
+              <span>Direct Benefit Transfer (DBT) Subsidy:</span>
+              <span className="font-semibold text-emerald-700">
+                -₹{(selectedInvoice?.subsidyDeduction || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-extrabold text-slate-900">
+              <span>Net Invoice Amount Payable:</span>
+              <span className="text-emerald-700">₹{(selectedInvoice?.grandTotal || 0).toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex justify-between text-xs text-slate-600">
+              <span>Amount Paid to Date:</span>
+              <span className="font-semibold text-slate-900">
+                ₹{(selectedInvoice?.paidAmount || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs font-bold text-rose-600">
+              <span>Balance Due:</span>
+              <span>₹{(selectedInvoice?.balanceDue || 0).toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          {/* Footer note */}
+          <p className="text-[11px] text-slate-400 text-center italic">
+            Certified installation backed by SunPower 20-year linear performance warranty. All panels compliant with ALMM.
+          </p>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-colors"
+            >
+              <Printer className="w-3.5 h-3.5" /> Print / Save Invoice
+            </button>
+            <button
+              onClick={() => setIsInvoiceModalOpen(false)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* MODAL 2: View Quotation Component Bill of Materials (Customer Review) */}
+      <Modal
+        isOpen={isQuoteViewModalOpen}
+        onClose={() => setIsQuoteViewModalOpen(false)}
+        title={`Quotation Component Bill: ${selectedQuoteForView?.quotationNumber || ''}`}
+      >
+        <div className="space-y-4 text-xs max-h-[80vh] overflow-y-auto pr-1">
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="font-mono text-slate-500 font-bold block">{selectedQuoteForView?.quotationNumber}</span>
+              <h3 className="font-bold text-sm text-slate-900 mt-0.5">
+                {selectedQuoteForView?.capacityKw} kW {selectedQuoteForView?.systemType} Solar Package
+              </h3>
+              <p className="text-slate-500 text-[11px] mt-0.5">Prepared for: {selectedQuoteForView?.customerName}</p>
+            </div>
+            <StatusBadge status={selectedQuoteForView?.status} />
+          </div>
+
+          {/* Component Breakdown Table */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="bg-slate-50 px-3.5 py-2 border-b border-slate-200 font-bold text-slate-800">
+              Quoted Components Bill of Materials
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 border-b border-slate-100">
+                  <tr>
+                    <th className="py-2 px-3">#</th>
+                    <th className="py-2 px-3">Component / Equipment</th>
+                    <th className="py-2 px-3">Category</th>
+                    <th className="py-2 px-3 text-center">Qty</th>
+                    <th className="py-2 px-3 text-right">Unit Price (₹)</th>
+                    <th className="py-2 px-3 text-right">Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(selectedQuoteForView?.items || []).map((it, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/50">
+                      <td className="py-2 px-3 font-mono text-slate-400">{idx + 1}</td>
+                      <td className="py-2 px-3 font-semibold text-slate-900">{it.name}</td>
+                      <td className="py-2 px-3 text-slate-500">{it.category}</td>
+                      <td className="py-2 px-3 text-center font-bold text-slate-800">{it.quantity}</td>
+                      <td className="py-2 px-3 text-right">₹{(it.unitPrice || 0).toLocaleString('en-IN')}</td>
+                      <td className="py-2 px-3 text-right font-bold text-slate-900">
+                        ₹{((it.quantity || 1) * (it.unitPrice || 0)).toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Financial Breakdown */}
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+            <div className="flex justify-between text-slate-600">
+              <span>Gross Component Base Value:</span>
+              <span className="font-semibold text-slate-800">
+                ₹{selectedQuoteForView?.totalAmount?.toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="flex justify-between text-slate-600">
+              <span>Special Promotional Discount:</span>
+              <span className="font-semibold text-rose-600">
+                -₹{(selectedQuoteForView?.discount || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="flex justify-between text-slate-600">
+              <span>Government DBT Subsidy Deduction:</span>
+              <span className="font-semibold text-emerald-600">
+                -₹{selectedQuoteForView?.subsidyAmount?.toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-extrabold text-slate-900">
+              <span>Net Customer Payable:</span>
+              <span className="text-emerald-700">₹{selectedQuoteForView?.netPayable?.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex justify-between text-[11px] text-slate-500 pt-0.5">
+              <span>20% Booking Commitment Advance:</span>
+              <span className="font-bold text-slate-800">
+                ₹{selectedQuoteForView?.advanceRequired?.toLocaleString('en-IN')}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            {selectedQuoteForView?.status === 'Sent' && (
+              <>
+                <button
+                  onClick={() => {
+                    handleRespondQuotation(selectedQuoteForView._id, 'reject');
+                    setIsQuoteViewModalOpen(false);
+                  }}
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 rounded-lg font-semibold text-xs transition-colors"
+                >
+                  Decline
+                </button>
+                <button
+                  onClick={() => {
+                    handleRespondQuotation(selectedQuoteForView._id, 'accept');
+                    setIsQuoteViewModalOpen(false);
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition-all"
+                >
+                  Accept & Confirm Order
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => setIsQuoteViewModalOpen(false)}
+              className="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal: New Solar Request */}
       <Modal isOpen={isEnquiryModalOpen} onClose={() => setIsEnquiryModalOpen(false)} title="Submit Rooftop Solar Request">
@@ -722,6 +1207,7 @@ const CustomerPortal = () => {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
               >
                 <option value={1}>1 kW (2 Panels, saves ~₹1,200/mo)</option>
+                <option value={2}>2 kW (4 Panels, saves ~₹2,500/mo)</option>
                 <option value={3}>3 kW (6 Panels, saves ~₹3,800/mo)</option>
                 <option value={5}>5 kW (10 Panels, saves ~₹6,500/mo)</option>
                 <option value={10}>10 kW (Commercial / Large Home)</option>
@@ -796,8 +1282,12 @@ const CustomerPortal = () => {
       <Modal isOpen={isTicketModalOpen} onClose={() => setIsTicketModalOpen(false)} title="Raise Service & Maintenance Request">
         <form onSubmit={handleCreateTicket} className="space-y-4 text-xs">
           <div className="p-3 bg-purple-50/70 rounded-xl border border-purple-100 text-purple-900">
-            <p className="font-semibold">Submitting for: <span className="font-bold">{user?.name || 'Customer'}</span> ({user?.phone || 'Phone on profile'})</p>
-            <p className="text-[11px] text-purple-700 mt-0.5">Tickets are automatically checked against your active warranties for free parts replacement.</p>
+            <p className="font-semibold">
+              Submitting for: <span className="font-bold">{user?.name || 'Customer'}</span> ({user?.phone || 'Phone on profile'})
+            </p>
+            <p className="text-[11px] text-purple-700 mt-0.5">
+              Tickets are automatically checked against your active warranties for free parts replacement.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

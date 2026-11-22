@@ -29,6 +29,10 @@ const invoiceSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    customerEmail: {
+      type: String,
+      default: ''
+    },
     customerAddress: {
       type: String,
       default: ''
@@ -41,7 +45,12 @@ const invoiceSchema = new mongoose.Schema(
       type: Number,
       default: 3
     },
+    items: [mongoose.Schema.Types.Mixed],
     subtotal: {
+      type: Number,
+      default: 0
+    },
+    discount: {
       type: Number,
       default: 0
     },

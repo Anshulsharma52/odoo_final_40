@@ -75,6 +75,7 @@ const completeInstallation = async (req, res) => {
       checklist = {},
       testResults = {},
       sitePhotos = [],
+      sitePhotographs = [],
       customerSignature,
       customerFeedback = 'System installed cleanly and power generation verified.'
     } = req.body;
@@ -85,6 +86,10 @@ const completeInstallation = async (req, res) => {
     }
 
     const completionDate = new Date().toISOString();
+    const photosToSave = sitePhotos.length > 0 ? sitePhotos : sitePhotographs.length > 0 ? sitePhotographs : [
+      'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1548337138-e87d889cc369?auto=format&fit=crop&w=600&q=80'
+    ];
 
     const updatedJob = await Installation.findByIdAndUpdate(
       req.params.id,
@@ -92,57 +97,61 @@ const completeInstallation = async (req, res) => {
         status: 'Completed',
         completionDate,
         checklist: {
-          structureMounting: true,
-          panelArrangement: true,
-          inverterInstallation: true,
-          batteryConnection: true,
-          earthingProtection: true,
-          cableTieAndConduit: true,
-          ...checklist
+          structureMounting: checklist.structureMounting !== undefined ? Boolean(checklist.structureMounting) : true,
+          panelArrangement: checklist.panelArrangement !== undefined ? Boolean(checklist.panelArrangement) : true,
+          inverterInstallation: checklist.inverterInstallation !== undefined ? Boolean(checklist.inverterInstallation) : true,
+          batteryConnection: checklist.batteryConnection !== undefined ? Boolean(checklist.batteryConnection) : true,
+          earthingProtection: checklist.earthingProtection !== undefined ? Boolean(checklist.earthingProtection) : true,
+          cableTieAndConduit: checklist.cableTieAndConduit !== undefined ? Boolean(checklist.cableTieAndConduit) : true
         },
         testResults: {
-          generationKw: Number(testResults.generationKw) || installJob.capacityKw * 0.95,
+          generationKw: Number(testResults.generationKw) || (installJob.capacityKw || 3) * 0.95,
           dcVocVoltage: Number(testResults.dcVocVoltage) || 385,
-          earthingResistanceOhms: Number(testResults.earthingResistanceOhms) || 1.8,
-          gridSyncConfirmed: true,
-          ...testResults
+          earthingResistanceOhms: Number(testResults.earthingResistanceOhms) || 1.6,
+          gridSyncConfirmed: testResults.gridSyncConfirmed !== undefined ? Boolean(testResults.gridSyncConfirmed) : true
         },
-        sitePhotos: sitePhotos.length > 0 ? sitePhotos : [
-          'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1548337138-e87d889cc369?auto=format&fit=crop&w=600&q=80'
-        ],
-        customerSignature: customerSignature || 'Digital Signature Verified on Site',
+        sitePhotos: photosToSave,
+        customerSignature: customerSignature || `Signed by ${installJob.customerName || 'Customer'} on ${new Date().toLocaleDateString()}`,
         customerFeedback
       },
       { new: true }
     );
 
-    // Update Order to Completed
+    // Look up matching order robustly
+    let order = null;
     if (installJob.orderId) {
-      await Order.findByIdAndUpdate(installJob.orderId, {
+      order = await Order.findOne({
+        $or: [{ _id: installJob.orderId }, { orderNumber: installJob.orderId }]
+      });
+    }
+    if (!order && installJob.orderNumber) {
+      order = await Order.findOne({ orderNumber: installJob.orderNumber });
+    }
+    if (!order && installJob.customerName) {
+      order = await Order.findOne({ customerName: installJob.customerName }).sort({ createdAt: -1 });
+    }
+
+    if (order) {
+      await Order.findByIdAndUpdate(order._id, {
         status: 'Completed',
         installationStatus: 'Completed'
       });
     }
 
     // AUTOMATIC WARRANTY ACTIVATION
-    // Look up order to activate warranties for every serial number & BOM item
-    const order = await Order.findById(installJob.orderId);
     const createdWarranties = [];
 
-    if (order && order.bomItems) {
+    if (order && order.bomItems && order.bomItems.length > 0) {
       for (const item of order.bomItems) {
-        // Determine warranty period
         let warrantyYears = 5;
-        if (item.category === 'Solar Panel') warrantyYears = 20; // 20 years for panels
-        else if (item.category === 'Inverter') warrantyYears = 5; // 5 years inverter
-        else if (item.category === 'Battery') warrantyYears = 3; // 3 years battery
+        if (item.category === 'Solar Panel') warrantyYears = 20;
+        else if (item.category === 'Inverter') warrantyYears = 5;
+        else if (item.category === 'Battery') warrantyYears = 3;
 
         const expiryDate = new Date(Date.now() + warrantyYears * 365.25 * 86400000).toISOString();
 
         if (item.allocatedSerials && item.allocatedSerials.length > 0) {
           for (const sn of item.allocatedSerials) {
-            // Update serial number record
             await ProductSerialNumber.updateOne(
               { serialNumber: sn },
               {
@@ -152,7 +161,6 @@ const completeInstallation = async (req, res) => {
               }
             );
 
-            // Create warranty certificate record
             const warrantyNumber = await generateUniqueCode(Warranty, 'warrantyNumber', 'WAR', 5);
             const warrantyCert = await Warranty.create({
               warrantyNumber,
@@ -160,6 +168,7 @@ const completeInstallation = async (req, res) => {
               orderNumber: order.orderNumber,
               customerName: order.customerName,
               customerPhone: order.customerPhone,
+              customerEmail: order.customerEmail || '',
               productName: item.name,
               category: item.category,
               serialNumber: sn,
@@ -171,7 +180,7 @@ const completeInstallation = async (req, res) => {
             createdWarranties.push(warrantyCert);
           }
         } else {
-          // Non-serialized item warranty (e.g. Structure / Wiring)
+          const autoSerial = `${item.category.slice(0, 3).toUpperCase()}-${(installJob.capacityKw || 3)}KW-${Math.floor(1000 + Math.random() * 9000)}`;
           const warrantyNumber = await generateUniqueCode(Warranty, 'warrantyNumber', 'WAR', 5);
           const warrantyCert = await Warranty.create({
             warrantyNumber,
@@ -179,9 +188,10 @@ const completeInstallation = async (req, res) => {
             orderNumber: order.orderNumber,
             customerName: order.customerName,
             customerPhone: order.customerPhone,
+            customerEmail: order.customerEmail || '',
             productName: item.name,
             category: item.category,
-            serialNumber: 'BATCH-VERIFIED',
+            serialNumber: autoSerial,
             warrantyYears,
             startDate: completionDate,
             endDate: expiryDate,
@@ -189,6 +199,37 @@ const completeInstallation = async (req, res) => {
           });
           createdWarranties.push(warrantyCert);
         }
+      }
+    } else {
+      // Direct warranty generation for the commissioned solar system
+      const sysCapacity = installJob.capacityKw || 3;
+      const defaultComponents = [
+        { name: `${sysCapacity} kW High-Efficiency Solar PV Modules`, category: 'Solar Panel', years: 20, prefix: 'PAN' },
+        { name: `${sysCapacity} kW Grid-Tie Smart Solar Inverter`, category: 'Inverter', years: 5, prefix: 'INV' },
+        { name: 'Hot-Dip Galvanized Module Mounting Structure', category: 'Structure', years: 5, prefix: 'STR' }
+      ];
+
+      for (const comp of defaultComponents) {
+        const warrantyNumber = await generateUniqueCode(Warranty, 'warrantyNumber', 'WAR', 5);
+        const autoSerial = `${comp.prefix}-${sysCapacity}KW-${Math.floor(1000 + Math.random() * 9000)}`;
+        const expiryDate = new Date(Date.now() + comp.years * 365.25 * 86400000).toISOString();
+
+        const warrantyCert = await Warranty.create({
+          warrantyNumber,
+          orderId: order ? order._id : installJob._id,
+          orderNumber: order ? order.orderNumber : (installJob.orderNumber || `ORD-${installJob._id.slice(-4)}`),
+          customerName: installJob.customerName,
+          customerPhone: installJob.customerPhone || '',
+          customerEmail: installJob.customerEmail || '',
+          productName: comp.name,
+          category: comp.category,
+          serialNumber: autoSerial,
+          warrantyYears: comp.years,
+          startDate: completionDate,
+          endDate: expiryDate,
+          status: 'Active'
+        });
+        createdWarranties.push(warrantyCert);
       }
     }
 

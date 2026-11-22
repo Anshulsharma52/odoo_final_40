@@ -33,9 +33,19 @@ const createTicket = async (req, res) => {
     let isUnderWarranty = false;
     let warrantyRef = null;
 
-    if (serialNumber) {
+    if (serialNumber && serialNumber.trim()) {
+      const cleanInput = serialNumber.trim();
+      const tokens = cleanInput.split(/[\s\-_]+/).filter(Boolean);
+      const flexRegex = tokens.length > 0
+        ? new RegExp(tokens.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-_]*'), 'i')
+        : new RegExp(cleanInput, 'i');
+
       const warranty = await Warranty.findOne({
-        serialNumber: { $regex: `^${serialNumber.trim()}$`, $options: 'i' }
+        $or: [
+          { serialNumber: flexRegex },
+          { serialNumber: { $regex: cleanInput, $options: 'i' } },
+          { warrantyNumber: flexRegex }
+        ]
       });
       if (warranty && warranty.status === 'Active' && new Date(warranty.endDate) > new Date()) {
         isUnderWarranty = true;
